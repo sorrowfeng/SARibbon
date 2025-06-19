@@ -401,6 +401,8 @@ void MainWindow::createCategoryMain(SARibbonCategory* page)
 	mComboboxRibbonTheme->addItem("Theme Office2021 Blue", static_cast< int >(SARibbonTheme::RibbonThemeOffice2021Blue));
 	mComboboxRibbonTheme->addItem("Theme Dark", static_cast< int >(SARibbonTheme::RibbonThemeDark));
 	mComboboxRibbonTheme->addItem("Theme Dark2", static_cast< int >(SARibbonTheme::RibbonThemeDark2));
+	mComboboxRibbonTheme->addItem("Theme Fluent UI Light", static_cast< int >(SARibbonTheme::RibbonThemeFluentUILight));
+	mComboboxRibbonTheme->addItem("Theme Fluent UI Dark", static_cast< int >(SARibbonTheme::RibbonThemeFluentUIDark));
 	mComboboxRibbonTheme->setCurrentIndex(mComboboxRibbonTheme->findData(static_cast< int >(ribbonTheme())));
 	connect(mComboboxRibbonTheme,
             QOverload< int >::of(&SARibbonComboBox::currentIndexChanged),

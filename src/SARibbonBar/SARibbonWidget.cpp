@@ -247,7 +247,13 @@ void sa_set_ribbon_theme(QWidget* w, SARibbonTheme theme)
         break;
     case SARibbonTheme::RibbonThemeDark2:
         file.setFileName(":/theme/resource/theme-dark2.qss");
-        break;
+		break;
+	case SARibbonTheme::RibbonThemeFluentUILight:
+		file.setFileName(":/theme/resource/theme-fluent-ui-light.qss");
+		break;
+	case SARibbonTheme::RibbonThemeFluentUIDark:
+		file.setFileName(":/theme/resource/theme-fluent-ui-dark.qss");
+		break;
     default:
         file.setFileName(":/theme/resource/theme-office2013.qss");
         break;

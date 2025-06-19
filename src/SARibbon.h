@@ -177,7 +177,9 @@ enum class SARibbonTheme
 	RibbonThemeOffice2021Blue,  ///< office2021-蓝色主题
 	RibbonThemeWindows7,        ///< win7主题
 	RibbonThemeDark,            ///< 暗色主题
-	RibbonThemeDark2
+	RibbonThemeDark2,
+	RibbonThemeFluentUILight,  ///< Fluent UI 亮色主题
+	RibbonThemeFluentUIDark,   ///< Fluent UI 暗色主题
 };
 
 /**

@@ -17789,6 +17789,14 @@ void SARibbonMainWindow::PrivateData::updateContextColors(SARibbonBar* bar, SARi
 		bar->setContextCategoryColorList({ QColor(209, 207, 209) });
 		bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(39, 96, 167); });
 		break;
+	case SARibbonTheme::RibbonThemeFluentUILight:
+		bar->setContextCategoryColorList({ QColor(243, 243, 243) });
+		bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(0, 103, 192); });
+		break;
+	case SARibbonTheme::RibbonThemeFluentUIDark:
+		bar->setContextCategoryColorList({});
+		bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(0, 120, 212); });
+		break;
 	default:
 		break;
 	}
@@ -18182,7 +18190,22 @@ void SARibbonWidget::setRibbonTheme(SARibbonTheme theme)
 			//! margin-left: 5px;
 			//! margin-bottom: 0px;
 			tab->setTabMargin(QMargins(5, 0, 5, 0));
-		}
+		} break;
+		case SARibbonTheme::RibbonThemeFluentUILight:
+		case SARibbonTheme::RibbonThemeFluentUIDark: {
+			SARibbonTabBar* tab = bar->ribbonTabBar();
+			if (!tab) {
+				break;
+			}
+			//! 在设置qss后需要针对margin信息重新设置进SARibbonTabBar中
+			//! FluentUILight.qss的margin信息如下设置
+			//! margin-top: 0px;
+			//! margin-right: 0px;
+			//! margin-left: 5px;
+			//! margin-bottom: 0px;
+			tab->setTabMargin(QMargins(5, 0, 0, 0));
+
+		} break;
 		default:
 			break;
 		}
@@ -18198,6 +18221,12 @@ void SARibbonWidget::setRibbonTheme(SARibbonTheme theme)
 			break;
 		case SARibbonTheme::RibbonThemeOffice2021Blue:
 			bar->setContextCategoryColorList(QList< QColor >() << QColor(209, 207, 209));  //< 设置空颜色列表会重置为默认色系
+			break;
+		case SARibbonTheme::RibbonThemeFluentUILight:
+			bar->setContextCategoryColorList(QList< QColor >() << QColor(0, 103, 192));  //< 设置空颜色列表会重置为默认色系
+			break;
+		case SARibbonTheme::RibbonThemeFluentUIDark:
+			bar->setContextCategoryColorList(QList< QColor >() << QColor(0, 120, 212));  //< 设置空颜色列表会重置为默认色系
 			break;
 		default:
 			break;
@@ -18315,6 +18344,12 @@ void sa_set_ribbon_theme(QWidget* w, SARibbonTheme theme)
 		break;
 	case SARibbonTheme::RibbonThemeDark2:
 		file.setFileName(":/theme/resource/theme-dark2.qss");
+		break;
+	case SARibbonTheme::RibbonThemeFluentUILight:
+		file.setFileName(":/theme/resource/theme-fluent-ui-light.qss");
+		break;
+	case SARibbonTheme::RibbonThemeFluentUIDark:
+		file.setFileName(":/theme/resource/theme-fluent-ui-dark.qss");
 		break;
 	default:
 		file.setFileName(":/theme/resource/theme-office2013.qss");

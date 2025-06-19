@@ -98,7 +98,9 @@ void SARibbonMainWindow::PrivateData::updateTabBarMargins(SARibbonTabBar* tab, S
 		{ SARibbonTheme::RibbonThemeOffice2016Blue, { 5, 0, 0, 0 } },
 		{ SARibbonTheme::RibbonThemeDark, { 5, 0, 0, 0 } },
 		{ SARibbonTheme::RibbonThemeDark2, { 5, 0, 0, 0 } },
-		{ SARibbonTheme::RibbonThemeOffice2021Blue, { 5, 0, 5, 0 } }
+		{ SARibbonTheme::RibbonThemeOffice2021Blue, { 5, 0, 5, 0 } },
+		{ SARibbonTheme::RibbonThemeFluentUILight, { 5, 0, 0, 0 } },
+		{ SARibbonTheme::RibbonThemeFluentUIDark, { 5, 0, 0, 0 } }
 	};
 	auto it = themeMargins.find(theme);
 	if (it != themeMargins.end()) {
@@ -129,6 +131,14 @@ void SARibbonMainWindow::PrivateData::updateContextColors(SARibbonBar* bar, SARi
 	case SARibbonTheme::RibbonThemeOffice2021Blue:
 		bar->setContextCategoryColorList({ QColor(209, 207, 209) });
 		bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(39, 96, 167); });
+		break;
+	case SARibbonTheme::RibbonThemeFluentUILight:
+		bar->setContextCategoryColorList({ QColor(243, 243, 243) });
+		bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(0, 103, 192); });
+		break;
+	case SARibbonTheme::RibbonThemeFluentUIDark:
+		bar->setContextCategoryColorList({});
+		bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(0, 120, 212); });
 		break;
 	default:
 		break;
