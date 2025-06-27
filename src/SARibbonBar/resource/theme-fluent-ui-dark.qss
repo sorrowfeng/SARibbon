@@ -108,6 +108,11 @@ SARibbonApplicationButton:pressed {
     border-bottom: 5px solid #0067C0;
 }
 
+SARibbonApplicationButton::menu-indicator {
+  /*subcontrol-position: right;*/
+  width:0px;
+}
+
 /* SARibbonTabBar */
 SARibbonTabBar {
     background-color: transparent;

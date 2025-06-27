@@ -94,3 +94,6 @@ CMakeSettings.json
 # --------
 *.dll
 *.exe
+
+# other
+install/
