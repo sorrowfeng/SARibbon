@@ -312,7 +312,7 @@ void SARibbonSystemButtonBar::setWindowStates(Qt::WindowStates s)
 	if (d_ptr->buttonMaximize) {
 		bool on = s.testFlag(Qt::WindowMaximized);
 		d_ptr->buttonMaximize->setChecked(on);
-		d_ptr->buttonMaximize->setToolTip(on ? tr("Restore") : tr("Maximize"));
+		// d_ptr->buttonMaximize->setToolTip(on ? tr("Restore") : tr("Maximize"));
 	}
 }
 
