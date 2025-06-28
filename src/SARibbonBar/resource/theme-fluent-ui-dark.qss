@@ -151,7 +151,7 @@ SARibbonToolButton {
 }
 SARibbonToolButton:pressed {
     border: 1px solid #2D2C2C;
-    color: #000000;
+    color: #FFFFFF;
     background-color: #4C4B49;
 }
 SARibbonToolButton:hover {
@@ -213,7 +213,7 @@ SARibbonGalleryGroup {
 }
 SARibbonGalleryGroup::item:selected {
     background-color: #4C4B49;
-    color: white;
+    color: #FFFFFF;
 }
 SARibbonGalleryGroup::item:hover {
     border: 1px solid #5E5D5B;
@@ -230,7 +230,7 @@ SARibbonMenu::item:selected {
     background-color: #4C4B49;
 }
 SARibbonMenu::item:hover {
-    color: #000;
+    color: #FFFFFF;
     background-color: #4C4B49;
     border: 1px solid #5E5D5B;
 }
@@ -251,10 +251,10 @@ SARibbonComboBox {
 }
 SARibbonComboBox:hover {
     border: 1px solid #0067C0;
-    color: #000;
+    color: #FFFFFF;
 }
 SARibbonComboBox:editable {
-    color: #000;
+    color: #FFFFFF;
     background: #2D2C2C;
     selection-background-color: #0067C0;
     selection-color: white;
@@ -273,37 +273,55 @@ SARibbonComboBox::down-arrow {
     image: url(:/SARibbon/image/resource/ArrowDown.png);
 }
 
-/* SARibbonSystemToolButton */
+/*SARibbonCategoryScrollButton*/
+SARibbonCategoryScrollButton {
+  border: 1px solid #2a8db5;
+  color: #dadada;
+  background-color: #344253;
+}
+
+SARibbonCategoryScrollButton[arrowType="3"] {
+  border-right-width: 1px;
+}
+
+SARibbonCategoryScrollButton[arrowType="4"] {
+  border-left-width: 1px;
+}
+/*SARibbonSystemToolButton*/
+
 SARibbonSystemToolButton {
-    background-color: transparent;
-    border: none;
+  background-color: transparent;
+  border:none;
 }
+
 SARibbonSystemToolButton:focus {
-    outline: none;
+  outline: none;
 }
+
+/* 深色模式的系统按钮设置 */
 /*Min*/
 SARibbonSystemToolButton#SAMinimizeWindowButton {
   background-position:center;
   background-repeat: no-repeat;
-  background-image: url(:/SARibbon/image/resource/Titlebar_Min.svg);
+  background-image: url(:/SARibbon/image/resource/Titlebar_Min_Hover.svg);
 }
-SARibbonSystemToolButton#SAMinimizeWindowButton:hover {
-    background-color: #4C4B49;
+SARibbonSystemToolButton#SAMinimizeWindowButton:hover{
+  background-color: #b2b2b2;
 }
-SARibbonSystemToolButton#SAMinimizeWindowButton:pressed {
-    background-color: #5E5D5B;
+SARibbonSystemToolButton#SAMinimizeWindowButton:pressed{
+  background-color: #cacacb;
 }
 /*Max*/
 SARibbonSystemToolButton#SAMaximizeWindowButton {
     background-position:center;
     background-repeat: no-repeat;
-    background-image: url(:/SARibbon/image/resource/Titlebar_Max.svg);
+    background-image: url(:/SARibbon/image/resource/Titlebar_Max_Hover.svg);
 }
 SARibbonSystemToolButton#SAMaximizeWindowButton:hover {
-    background-color: #4C4B49;
+    background-color: #b2b2b2;
 }
 SARibbonSystemToolButton#SAMaximizeWindowButton:checked {
-    background-image: url(:/SARibbon/image/resource/Titlebar_Normal.svg);
+    background-image: url(:/SARibbon/image/resource/Titlebar_Normal_Hover.svg) center;
 }
 
 
@@ -311,11 +329,11 @@ SARibbonSystemToolButton#SAMaximizeWindowButton:checked {
 SARibbonSystemToolButton#SACloseWindowButton {
     background-position:center;
     background-repeat: no-repeat;
-    background-image: url(:/SARibbon/image/resource/Titlebar_Close.svg);
+    background-image: url(:/SARibbon/image/resource/Titlebar_Close_Hover.svg);
 }
 SARibbonSystemToolButton#SACloseWindowButton:hover {
-    background-color: #D93936;
+  background-color: #e81123;
 }
 SARibbonSystemToolButton#SACloseWindowButton:pressed {
-    background-color: #B22D2A;
+    background-color: #f1707a;
 }
