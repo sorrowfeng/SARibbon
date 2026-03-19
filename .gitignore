@@ -97,3 +97,6 @@ CMakeSettings.json
 
 # other
 install/
+install-linux/
+build/
+build-linux/
