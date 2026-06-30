@@ -4478,7 +4478,17 @@ public:
 
 	void resizeElement(QSize size)
 	{
-		int x = size.width();
+		bool hasButtonRightMargin = false;
+		int buttonRightMargin = q_ptr->property("_sa_window_button_right_margin").toInt(&hasButtonRightMargin);
+		if (!hasButtonRightMargin || buttonRightMargin < 0) {
+			buttonRightMargin = 0;
+		}
+		bool hasButtonSpacing = false;
+		int buttonSpacing = q_ptr->property("_sa_window_button_spacing").toInt(&hasButtonSpacing);
+		if (!hasButtonSpacing || buttonSpacing < 0) {
+			buttonSpacing = 0;
+		}
+		int x = size.width() - buttonRightMargin;
 		bool hasButtonHeight = false;
 		int buttonHeight     = q_ptr->property("_sa_window_button_height").toInt(&hasButtonHeight);
 		if (!hasButtonHeight || buttonHeight <= 0 || buttonHeight > size.height()) {
@@ -4492,11 +4502,13 @@ public:
 		}
 		if (buttonMaximize) {
 			int w = maxButtonWidthHint();
+			x -= buttonSpacing;
 			x -= w;
 			buttonMaximize->setGeometry(x, buttonY, w, buttonHeight);
 		}
 		if (buttonMinimize) {
 			int w = minButtonWidthHint();
+			x -= buttonSpacing;
 			x -= w;
 			buttonMinimize->setGeometry(x, buttonY, w, buttonHeight);
 		}
@@ -4542,6 +4554,21 @@ public:
 		}
 		if (buttonMinimize) {
 			res.setWidth(res.width() + minButtonWidthHint());
+		}
+		int visibleButtonCount = 0;
+		visibleButtonCount += buttonClose ? 1 : 0;
+		visibleButtonCount += buttonMaximize ? 1 : 0;
+		visibleButtonCount += buttonMinimize ? 1 : 0;
+		bool hasButtonRightMargin = false;
+		const int buttonRightMargin =
+		    qMax(0, q_ptr->property("_sa_window_button_right_margin").toInt(&hasButtonRightMargin));
+		if (hasButtonRightMargin) {
+			res.rwidth() += buttonRightMargin;
+		}
+		bool hasButtonSpacing = false;
+		const int buttonSpacing = qMax(0, q_ptr->property("_sa_window_button_spacing").toInt(&hasButtonSpacing));
+		if (hasButtonSpacing && visibleButtonCount > 1) {
+			res.rwidth() += buttonSpacing * (visibleButtonCount - 1);
 		}
 		return res;
 	}
@@ -7821,7 +7848,11 @@ QSize SARibbonTabBar::tabSizeHint(int index) const
 		tabItemHeight = qMin(tabItemHeight, height());
 	}
 	QSize csz = QSize(textWidth + opt.iconSize.width() + hframe + widgetWidth + padding, tabItemHeight);
-	return style()->sizeFromContents(QStyle::CT_TabBarTab, &opt, csz, this);
+	QSize hint = style()->sizeFromContents(QStyle::CT_TabBarTab, &opt, csz, this);
+	if (hasTabItemHeight && tabItemHeight > 0) {
+		hint.setHeight(tabItemHeight);
+	}
+	return hint;
 }
 
 /*** End of inlined file: SARibbonTabBar.cpp ***/
@@ -15098,6 +15129,11 @@ void SARibbonBar::resizeStackedContainerWidget()
 	int y = ribbonTabBarGeometry.bottom() + 1;
 	if (isCompactStyle() && property("_sa_compact_tabbar_centered").toBool()) {
 		y = border.top() + titleBarHeight();
+		bool hasStackedTopGap = false;
+		int stackedTopGap     = property("_sa_stacked_top_gap").toInt(&hasStackedTopGap);
+		if (hasStackedTopGap && stackedTopGap > 0) {
+			y += stackedTopGap;
+		}
 	}
 	int w = width() - border.left() - border.right();
 	int h = d_ptr->categoryHeight();
@@ -18457,8 +18493,9 @@ void SARibbonMainWindow::setRibbonTheme(SARibbonTheme theme)
 		    isModernBlue ? QMargins(0, 0, 0, 0) : QMargins(3, 0, 3, 0);
 		bar->setContentsMargins(ribbonMargins);
 		bar->setProperty("_sa_compact_tabbar_centered", isModernBlue);
+		bar->setProperty("_sa_stacked_top_gap", isModernBlue ? 2 : 0);
 		if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
-			tab->setProperty("_sa_tab_item_height", isModernBlue ? 36 : 0);
+			tab->setProperty("_sa_tab_item_height", isModernBlue ? 30 : 0);
 		}
 		if (isModernBlue) {
 			if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
@@ -18467,8 +18504,10 @@ void SARibbonMainWindow::setRibbonTheme(SARibbonTheme theme)
 		}
 		if (isModernBlue && d_ptr->mWindowButtonGroup) {
 			d_ptr->mWindowButtonGroup->setButtonWidthStretch(1, 1, 1);
-			d_ptr->mWindowButtonGroup->setWindowButtonWidth(30);
+			d_ptr->mWindowButtonGroup->setWindowButtonWidth(28);
 			d_ptr->mWindowButtonGroup->setProperty("_sa_window_button_height", 30);
+			d_ptr->mWindowButtonGroup->setProperty("_sa_window_button_spacing", 4);
+			d_ptr->mWindowButtonGroup->setProperty("_sa_window_button_right_margin", 12);
 			QResizeEvent resizeEvent(size(), size());
 			QApplication::sendEvent(this, &resizeEvent);
 		}
@@ -18633,8 +18672,9 @@ void SARibbonWidget::setRibbonTheme(SARibbonTheme theme)
 		auto theme = ribbonTheme();
 		bar->setContentsMargins(QMargins(0, 0, 0, 0));
 		bar->setProperty("_sa_compact_tabbar_centered", theme == SARibbonTheme::RibbonThemeModernBlue);
+		bar->setProperty("_sa_stacked_top_gap", theme == SARibbonTheme::RibbonThemeModernBlue ? 2 : 0);
 		if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
-			tab->setProperty("_sa_tab_item_height", theme == SARibbonTheme::RibbonThemeModernBlue ? 36 : 0);
+			tab->setProperty("_sa_tab_item_height", theme == SARibbonTheme::RibbonThemeModernBlue ? 30 : 0);
 		}
 		if (theme == SARibbonTheme::RibbonThemeModernBlue) {
 			if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {

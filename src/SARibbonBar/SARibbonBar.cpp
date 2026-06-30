@@ -2401,6 +2401,11 @@ void SARibbonBar::resizeStackedContainerWidget()
 	int y = ribbonTabBarGeometry.bottom() + 1;
 	if (isCompactStyle() && property("_sa_compact_tabbar_centered").toBool()) {
 		y = border.top() + titleBarHeight();
+		bool hasStackedTopGap = false;
+		int stackedTopGap     = property("_sa_stacked_top_gap").toInt(&hasStackedTopGap);
+		if (hasStackedTopGap && stackedTopGap > 0) {
+			y += stackedTopGap;
+		}
 	}
 	int w = width() - border.left() - border.right();
 	int h = d_ptr->categoryHeight();

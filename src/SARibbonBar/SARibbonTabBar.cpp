@@ -61,5 +61,9 @@ QSize SARibbonTabBar::tabSizeHint(int index) const
 		tabItemHeight = qMin(tabItemHeight, height());
 	}
 	QSize csz = QSize(textWidth + opt.iconSize.width() + hframe + widgetWidth + padding, tabItemHeight);
-    return style()->sizeFromContents(QStyle::CT_TabBarTab, &opt, csz, this);
+	QSize hint = style()->sizeFromContents(QStyle::CT_TabBarTab, &opt, csz, this);
+	if (hasTabItemHeight && tabItemHeight > 0) {
+		hint.setHeight(tabItemHeight);
+	}
+    return hint;
 }

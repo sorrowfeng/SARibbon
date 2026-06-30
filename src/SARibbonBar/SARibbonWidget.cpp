@@ -86,8 +86,9 @@ void SARibbonWidget::setRibbonTheme(SARibbonTheme theme)
 		auto theme = ribbonTheme();
 		bar->setContentsMargins(QMargins(0, 0, 0, 0));
 		bar->setProperty("_sa_compact_tabbar_centered", theme == SARibbonTheme::RibbonThemeModernBlue);
+		bar->setProperty("_sa_stacked_top_gap", theme == SARibbonTheme::RibbonThemeModernBlue ? 2 : 0);
 		if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
-			tab->setProperty("_sa_tab_item_height", theme == SARibbonTheme::RibbonThemeModernBlue ? 36 : 0);
+			tab->setProperty("_sa_tab_item_height", theme == SARibbonTheme::RibbonThemeModernBlue ? 30 : 0);
 		}
 		if (theme == SARibbonTheme::RibbonThemeModernBlue) {
 			if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {

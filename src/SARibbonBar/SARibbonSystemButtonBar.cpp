@@ -119,7 +119,17 @@ public:
 
 	void resizeElement(QSize size)
 	{
-		int x = size.width();
+		bool hasButtonRightMargin = false;
+		int buttonRightMargin = q_ptr->property("_sa_window_button_right_margin").toInt(&hasButtonRightMargin);
+		if (!hasButtonRightMargin || buttonRightMargin < 0) {
+			buttonRightMargin = 0;
+		}
+		bool hasButtonSpacing = false;
+		int buttonSpacing = q_ptr->property("_sa_window_button_spacing").toInt(&hasButtonSpacing);
+		if (!hasButtonSpacing || buttonSpacing < 0) {
+			buttonSpacing = 0;
+		}
+		int x = size.width() - buttonRightMargin;
 		bool hasButtonHeight = false;
 		int buttonHeight     = q_ptr->property("_sa_window_button_height").toInt(&hasButtonHeight);
 		if (!hasButtonHeight || buttonHeight <= 0 || buttonHeight > size.height()) {
@@ -133,11 +143,13 @@ public:
 		}
 		if (buttonMaximize) {
 			int w = maxButtonWidthHint();
+			x -= buttonSpacing;
 			x -= w;
 			buttonMaximize->setGeometry(x, buttonY, w, buttonHeight);
 		}
 		if (buttonMinimize) {
 			int w = minButtonWidthHint();
+			x -= buttonSpacing;
 			x -= w;
 			buttonMinimize->setGeometry(x, buttonY, w, buttonHeight);
 		}
@@ -183,6 +195,21 @@ public:
 		}
 		if (buttonMinimize) {
 			res.setWidth(res.width() + minButtonWidthHint());
+		}
+		int visibleButtonCount = 0;
+		visibleButtonCount += buttonClose ? 1 : 0;
+		visibleButtonCount += buttonMaximize ? 1 : 0;
+		visibleButtonCount += buttonMinimize ? 1 : 0;
+		bool hasButtonRightMargin = false;
+		const int buttonRightMargin =
+		    qMax(0, q_ptr->property("_sa_window_button_right_margin").toInt(&hasButtonRightMargin));
+		if (hasButtonRightMargin) {
+			res.rwidth() += buttonRightMargin;
+		}
+		bool hasButtonSpacing = false;
+		const int buttonSpacing = qMax(0, q_ptr->property("_sa_window_button_spacing").toInt(&hasButtonSpacing));
+		if (hasButtonSpacing && visibleButtonCount > 1) {
+			res.rwidth() += buttonSpacing * (visibleButtonCount - 1);
 		}
 		return res;
 	}
