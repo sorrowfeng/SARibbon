@@ -358,7 +358,7 @@ void SARibbonMainWindow::setRibbonTheme(SARibbonTheme theme)
 		bar->setProperty("_sa_compact_tabbar_centered", isModernBlue);
 		bar->setProperty("_sa_stacked_top_gap", isModernBlue ? 2 : 0);
 		if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
-			tab->setProperty("_sa_tab_item_height", isModernBlue ? 30 : 0);
+			tab->setProperty("_sa_tab_item_height", isModernBlue ? 36 : 0);
 		}
 		if (isModernBlue) {
 			if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
