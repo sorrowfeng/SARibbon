@@ -1,4 +1,4 @@
-﻿#ifndef SARIBBONBAR_H
+#ifndef SARIBBONBAR_H
 #define SARIBBONBAR_H
 #include "SARibbonCategory.h"
 #include "SARibbonContextCategory.h"
@@ -378,6 +378,10 @@ public:
 	// 设置ribbon的对齐方式
 	void setRibbonAlignment(SARibbonAlignment al);
 	SARibbonAlignment ribbonAlignment() const;
+
+	// 设置pannel的水平对齐方式
+	void setPannelAlignment(SARibbonAlignment al);
+	SARibbonAlignment pannelAlignment() const;
 
 	// 此函数会遍历SARibbonBar下的所有Category，执行函数指针(bool(SARibbonCategory*))，函数指针返回false则停止迭代
 

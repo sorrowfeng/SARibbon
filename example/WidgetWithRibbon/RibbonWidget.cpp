@@ -50,6 +50,9 @@ void RibbonWidget::buildRibbon(SARibbonBar* bar)
     mComboTheme->addItem("Theme Office2021 Blue", static_cast< int >(SARibbonTheme::RibbonThemeOffice2021Blue));
     mComboTheme->addItem("Theme Dark", static_cast< int >(SARibbonTheme::RibbonThemeDark));
     mComboTheme->addItem("Theme Dark2", static_cast< int >(SARibbonTheme::RibbonThemeDark2));
+	mComboTheme->addItem("Theme Fluent UI Light", static_cast< int >(SARibbonTheme::RibbonThemeFluentUILight));
+	mComboTheme->addItem("Theme Fluent UI Dark", static_cast< int >(SARibbonTheme::RibbonThemeFluentUIDark));
+	mComboTheme->addItem("Theme Modern Blue", static_cast< int >(SARibbonTheme::RibbonThemeModernBlue));
 	mComboTheme->setCurrentIndex(mComboTheme->findData(static_cast< int >(SARibbonTheme::RibbonThemeOffice2013)));
 	connect(mComboTheme,
 	        QOverload< int >::of(&QComboBox::currentIndexChanged),
@@ -82,4 +85,7 @@ void RibbonWidget::onRibbonThemeComboBoxCurrentIndexChanged(int index)
 {
 	SARibbonTheme t = static_cast< SARibbonTheme >(mComboTheme->itemData(index).toInt());
     setRibbonTheme(t);
+	if (SARibbonTheme::RibbonThemeModernBlue == t) {
+		ribbonBar()->setPannelAlignment(SARibbonAlignment::AlignCenter);
+	}
 }

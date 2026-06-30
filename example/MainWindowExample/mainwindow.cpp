@@ -1,4 +1,4 @@
-﻿#include "mainwindow.h"
+#include "mainwindow.h"
 #if !SARIBBON_USE_3RDPARTY_FRAMELESSHELPER
 #include "SAFramelessHelper.h"
 #endif
@@ -606,6 +606,12 @@ void MainWindow::onRibbonThemeComboBoxCurrentIndexChanged(int index)
 {
 	SARibbonTheme t = static_cast< SARibbonTheme >(mComboboxRibbonTheme->itemData(index).toInt());
 	setRibbonTheme(t);
+	if (SARibbonTheme::RibbonThemeModernBlue == t) {
+		ribbonBar()->setPannelAlignment(SARibbonAlignment::AlignCenter);
+		if (SARibbonCheckBox* checkBox = findChild< SARibbonCheckBox* >("checkBoxAlignmentCenter")) {
+			checkBox->setChecked(true);
+		}
+	}
 }
 
 /**
@@ -649,9 +655,9 @@ void MainWindow::onActionVisibleAllTriggered(bool on)
 void MainWindow::onCheckBoxAlignmentCenterClicked(bool checked)
 {
 	if (checked) {
-		ribbonBar()->setRibbonAlignment(SARibbonAlignment::AlignCenter);
+		ribbonBar()->setPannelAlignment(SARibbonAlignment::AlignCenter);
 	} else {
-		ribbonBar()->setRibbonAlignment(SARibbonAlignment::AlignLeft);
+		ribbonBar()->setPannelAlignment(SARibbonAlignment::AlignLeft);
 	}
 }
 
@@ -820,6 +826,7 @@ void MainWindow::createCategoryMain(SARibbonCategory* page)
 	mComboboxRibbonTheme->addItem("Theme Dark2", static_cast< int >(SARibbonTheme::RibbonThemeDark2));
 	mComboboxRibbonTheme->addItem("Theme Fluent UI Light", static_cast< int >(SARibbonTheme::RibbonThemeFluentUILight));
 	mComboboxRibbonTheme->addItem("Theme Fluent UI Dark", static_cast< int >(SARibbonTheme::RibbonThemeFluentUIDark));
+	mComboboxRibbonTheme->addItem("Theme Modern Blue", static_cast< int >(SARibbonTheme::RibbonThemeModernBlue));
 	mComboboxRibbonTheme->setCurrentIndex(mComboboxRibbonTheme->findData(static_cast< int >(ribbonTheme())));
 	connect(mComboboxRibbonTheme,
 	        QOverload< int >::of(&SARibbonComboBox::currentIndexChanged),
@@ -829,7 +836,7 @@ void MainWindow::createCategoryMain(SARibbonCategory* page)
 
 	SARibbonCheckBox* checkBox = new SARibbonCheckBox(this);
 
-	checkBox->setText(tr("Alignment Center"));
+	checkBox->setText(tr("Pannel Center"));
 	checkBox->setObjectName("checkBoxAlignmentCenter");
 	checkBox->setWindowTitle(checkBox->text());
 	connect(checkBox, &SARibbonCheckBox::clicked, this, &MainWindow::onCheckBoxAlignmentCenterClicked);

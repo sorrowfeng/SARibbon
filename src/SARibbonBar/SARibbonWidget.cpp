@@ -1,4 +1,4 @@
-﻿#include "SARibbonWidget.h"
+#include "SARibbonWidget.h"
 #include "SARibbonBar.h"
 #include "SARibbonTabBar.h"
 #include <QApplication>
@@ -114,22 +114,58 @@ void SARibbonWidget::setRibbonTheme(SARibbonTheme theme)
 			//! margin-left: 5px;
 			//! margin-bottom: 0px;
 			tab->setTabMargin(QMargins(5, 0, 5, 0));
-		}
+		} break;
+		case SARibbonTheme::RibbonThemeFluentUILight:
+		case SARibbonTheme::RibbonThemeFluentUIDark: {
+			SARibbonTabBar* tab = bar->ribbonTabBar();
+			if (!tab) {
+				break;
+			}
+			tab->setTabMargin(QMargins(5, 0, 0, 0));
+		} break;
+		case SARibbonTheme::RibbonThemeModernBlue: {
+			SARibbonTabBar* tab = bar->ribbonTabBar();
+			if (!tab) {
+				break;
+			}
+			tab->setTabMargin(QMargins(6, 0, 6, 0));
+		} break;
 		default:
 			break;
 		}
 		// 上下文标签颜色设置,以及基线颜色设置
+		static const SARibbonBar::FpContextCategoryHighlight csDarkerHighlight = [](const QColor& c) -> QColor {
+			return c.darker();
+		};
+		static const SARibbonBar::FpContextCategoryHighlight csVibrantHighlight = [](const QColor& c) -> QColor {
+			return SA::makeColorVibrant(c);
+		};
 		switch (theme) {
 		case SARibbonTheme::RibbonThemeWindows7:
 		case SARibbonTheme::RibbonThemeOffice2013:
 		case SARibbonTheme::RibbonThemeDark:
 			bar->setContextCategoryColorList(QList< QColor >());  //< 设置空颜色列表会重置为默认色系
+			bar->setContextCategoryColorHighLight(csVibrantHighlight);
 			break;
 		case SARibbonTheme::RibbonThemeOffice2016Blue:
 			bar->setContextCategoryColorList(QList< QColor >() << QColor(18, 64, 120));  //< 设置空颜色列表会重置为默认色系
+			bar->setContextCategoryColorHighLight(csDarkerHighlight);
 			break;
 		case SARibbonTheme::RibbonThemeOffice2021Blue:
 			bar->setContextCategoryColorList(QList< QColor >() << QColor(209, 207, 209));  //< 设置空颜色列表会重置为默认色系
+			bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(39, 96, 167); });
+			break;
+		case SARibbonTheme::RibbonThemeFluentUILight:
+			bar->setContextCategoryColorList(QList< QColor >() << QColor(243, 243, 243));
+			bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(0, 103, 192); });
+			break;
+		case SARibbonTheme::RibbonThemeFluentUIDark:
+			bar->setContextCategoryColorList(QList< QColor >());
+			bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(0, 120, 212); });
+			break;
+		case SARibbonTheme::RibbonThemeModernBlue:
+			bar->setContextCategoryColorList(QList< QColor >() << QColor(39, 168, 232) << QColor(18, 63, 145));
+			bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return c.darker(130); });
 			break;
 		default:
 			break;
@@ -253,6 +289,9 @@ void sa_set_ribbon_theme(QWidget* w, SARibbonTheme theme)
 		break;
 	case SARibbonTheme::RibbonThemeFluentUIDark:
 		file.setFileName(":/theme/resource/theme-fluent-ui-dark.qss");
+		break;
+	case SARibbonTheme::RibbonThemeModernBlue:
+		file.setFileName(":/theme/resource/theme-modern-blue.qss");
 		break;
     default:
         file.setFileName(":/theme/resource/theme-office2013.qss");

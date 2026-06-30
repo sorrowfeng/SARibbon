@@ -1,4 +1,4 @@
-﻿#ifndef SARIBBONGLOBAL_H
+#ifndef SARIBBONGLOBAL_H
 #define SARIBBONGLOBAL_H
 #include <memory>
 #include <QtGlobal>
@@ -66,6 +66,7 @@ enum class SARibbonTheme
 	RibbonThemeDark2,
 	RibbonThemeFluentUILight,	///< Fluent UI 亮色主题
 	RibbonThemeFluentUIDark,   ///< Fluent UI 暗色主题
+	RibbonThemeModernBlue,        ///< Modern Blue 蓝色主题
 };
 
 /**

@@ -1,4 +1,4 @@
-﻿#include "SARibbonMainWindow.h"
+#include "SARibbonMainWindow.h"
 #include "SARibbonBar.h"
 #include "SARibbonElementManager.h"
 #include "SARibbonTabBar.h"
@@ -8,6 +8,7 @@
 #include <QHash>
 #include <QWindowStateChangeEvent>
 #include <QScreen>
+#include <map>
 
 #include "SARibbonSystemButtonBar.h"
 #include "SARibbonWidget.h"
@@ -100,7 +101,8 @@ void SARibbonMainWindow::PrivateData::updateTabBarMargins(SARibbonTabBar* tab, S
 		{ SARibbonTheme::RibbonThemeDark2, { 5, 0, 0, 0 } },
 		{ SARibbonTheme::RibbonThemeOffice2021Blue, { 5, 0, 5, 0 } },
 		{ SARibbonTheme::RibbonThemeFluentUILight, { 5, 0, 0, 0 } },
-		{ SARibbonTheme::RibbonThemeFluentUIDark, { 5, 0, 0, 0 } }
+		{ SARibbonTheme::RibbonThemeFluentUIDark, { 5, 0, 0, 0 } },
+		{ SARibbonTheme::RibbonThemeModernBlue, { 6, 0, 6, 0 } }
 	};
 	auto it = themeMargins.find(theme);
 	if (it != themeMargins.end()) {
@@ -139,6 +141,10 @@ void SARibbonMainWindow::PrivateData::updateContextColors(SARibbonBar* bar, SARi
 	case SARibbonTheme::RibbonThemeFluentUIDark:
 		bar->setContextCategoryColorList({});
 		bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(0, 120, 212); });
+		break;
+	case SARibbonTheme::RibbonThemeModernBlue:
+		bar->setContextCategoryColorList({ QColor(39, 168, 232), QColor(18, 63, 145) });
+		bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return c.darker(130); });
 		break;
 	default:
 		break;

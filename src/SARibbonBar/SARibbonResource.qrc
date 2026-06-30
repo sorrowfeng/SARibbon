@@ -25,5 +25,6 @@
         <file>resource/theme-dark2.qss</file>
         <file>resource/theme-fluent-ui-light.qss</file>
         <file>resource/theme-fluent-ui-dark.qss</file>
+        <file>resource/theme-modern-blue.qss</file>
     </qresource>
 </RCC>

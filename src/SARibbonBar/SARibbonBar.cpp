@@ -1,4 +1,4 @@
-﻿#include "SARibbonBar.h"
+#include "SARibbonBar.h"
 #include <QPointer>
 #include <QAction>
 #include <QApplication>
@@ -82,6 +82,7 @@ public:
 	bool mIsTitleVisible { true };                                        ///< 标题是否显示
 	QBrush mTitleBackgroundBrush { Qt::NoBrush };                         ///< 标题的背景颜色
 	SARibbonAlignment mRibbonAlignment { SARibbonAlignment::AlignLeft };  ///< 对齐方式
+	SARibbonAlignment mPannelAlignment { SARibbonAlignment::AlignLeft };  ///< pannel的水平对齐方式
 	SARibbonPannel::PannelLayoutMode mDefaulePannelLayoutMode { SARibbonPannel::ThreeRowMode };  ///< 默认的PannelLayoutMode
 	bool mEnableShowPannelTitle { true };           ///< 是否允许pannel的标题栏显示
 	bool mIsTabOnTitle { false };                   ///< 是否tab在标题栏上
@@ -704,6 +705,7 @@ void SARibbonBar::insertCategoryPage(SARibbonCategory* category, int index)
 	category->setPannelLayoutMode(d_ptr->mDefaulePannelLayoutMode);
 	category->setPannelSpacing(d_ptr->mPannelSpacing);
 	category->setPannelToolButtonIconSize(d_ptr->mPannelToolButtonSize);
+	category->setCategoryAlignment(d_ptr->mPannelAlignment);
 	int i = d_ptr->mRibbonTabBar->insertTab(index, category->categoryName());
 
 	_SARibbonTabData tabdata;
@@ -1481,7 +1483,7 @@ void SARibbonBar::synchronousCategoryData(bool autoUpdate)
 	iterateCategory([ this ](SARibbonCategory* c) -> bool {
 		c->setEnableShowPannelTitle(this->isEnableShowPannelTitle());
 		c->setPannelTitleHeight(this->pannelTitleHeight());
-		c->setCategoryAlignment(this->ribbonAlignment());
+		c->setCategoryAlignment(this->pannelAlignment());
 		c->setPannelLayoutMode(this->pannelLayoutMode());
 		return true;
 	});
@@ -2044,7 +2046,7 @@ void SARibbonBar::setContextCategoryColorHighLight(FpContextCategoryHighlight fp
 void SARibbonBar::setRibbonAlignment(SARibbonAlignment al)
 {
 	d_ptr->mRibbonAlignment = al;
-	synchronousCategoryData();
+	setPannelAlignment(al);
 }
 
 /**
@@ -2054,6 +2056,25 @@ void SARibbonBar::setRibbonAlignment(SARibbonAlignment al)
 SARibbonAlignment SARibbonBar::ribbonAlignment() const
 {
 	return d_ptr->mRibbonAlignment;
+}
+
+/**
+   @brief 设置pannel的水平对齐方式
+   @param al
+ */
+void SARibbonBar::setPannelAlignment(SARibbonAlignment al)
+{
+	d_ptr->mPannelAlignment = al;
+	synchronousCategoryData();
+}
+
+/**
+   @brief pannel的水平对齐方式
+   @return
+ */
+SARibbonAlignment SARibbonBar::pannelAlignment() const
+{
+	return d_ptr->mPannelAlignment;
 }
 
 /**

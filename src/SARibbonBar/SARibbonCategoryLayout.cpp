@@ -1,4 +1,4 @@
-﻿#include "SARibbonCategoryLayout.h"
+#include "SARibbonCategoryLayout.h"
 #include <QLayoutItem>
 #include "SARibbonPannel.h"
 #include "SARibbonElementManager.h"
@@ -639,7 +639,11 @@ int SARibbonCategoryLayout::categoryTotalWidth() const
  */
 void SARibbonCategoryLayout::setCategoryAlignment(SARibbonAlignment al)
 {
+    if (d_ptr->mCategoryAlignment == al) {
+        return;
+    }
     d_ptr->mCategoryAlignment = al;
+    invalidate();
 }
 
 /**
