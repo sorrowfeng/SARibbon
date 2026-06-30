@@ -4,6 +4,11 @@
         <file>resource/ArrowDown.png</file>
         <file>resource/ArrowMore.png</file>
         <file>resource/ArrowUp.png</file>
+        <file>resource/ArrowDown-w.png</file>
+        <file>resource/ArrowMore-w.png</file>
+        <file>resource/ArrowUp-w.png</file>
+        <file>resource/Ask-w.png</file>
+        <file>resource/Ask.png</file>
         <file>resource/Titlebar_Shade.png</file>
         <file>resource/Titlebar_Unshade.png</file>
         <file>resource/define-color.svg</file>

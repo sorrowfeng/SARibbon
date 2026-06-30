@@ -68,18 +68,18 @@ void ModernBlueStyleWindow::buildRibbon()
 		titleButtonLayout->setSpacing(2);
 	}
 	if (QAction* minimumAction = ribbon->minimumModeAction()) {
-		minimumAction->setIcon(QIcon(QStringLiteral(":/SARibbon/image/resource/Titlebar_Shade.png")));
+		minimumAction->setIcon(QIcon(QStringLiteral(":/SARibbon/image/resource/ArrowUp-w.png")));
 		if (SARibbonControlButton* button = rightGroup->actionToRibbonControlToolButton(minimumAction)) {
 			button->setFixedSize(28, 30);
 		}
 		connect(ribbon, &SARibbonBar::ribbonModeChanged, this, [ minimumAction ](SARibbonBar::RibbonMode mode) {
 			const QString iconPath = (mode == SARibbonBar::MinimumRibbonMode)
-			                             ? QStringLiteral(":/SARibbon/image/resource/Titlebar_Unshade.png")
-			                             : QStringLiteral(":/SARibbon/image/resource/Titlebar_Shade.png");
+			                             ? QStringLiteral(":/SARibbon/image/resource/ArrowDown-w.png")
+			                             : QStringLiteral(":/SARibbon/image/resource/ArrowUp-w.png");
 			minimumAction->setIcon(QIcon(iconPath));
 		});
 	}
-	QAction* helpAction = new QAction(createHelpIcon(), QString(), this);
+	QAction* helpAction = new QAction(QIcon(QStringLiteral(":/SARibbon/image/resource/Ask-w.png")), QString(), this);
 	helpAction->setToolTip(QStringLiteral("帮助"));
 	rightGroup->addAction(helpAction);
 	if (SARibbonControlButton* button = rightGroup->actionToRibbonControlToolButton(helpAction)) {
@@ -233,26 +233,5 @@ QIcon ModernBlueStyleWindow::createGlyphIcon(const QString& glyph, const QColor&
 	painter.setPen(foreground);
 	painter.drawText(pixmap.rect(), Qt::AlignCenter, glyph);
 
-	return QIcon(pixmap);
-}
-
-QIcon ModernBlueStyleWindow::createHelpIcon()
-{
-	QPixmap pixmap(32, 32);
-	pixmap.fill(Qt::transparent);
-
-	QPainter painter(&pixmap);
-	painter.setRenderHint(QPainter::Antialiasing);
-	QPen pen(QColor(220, 235, 255), 1.7);
-	painter.setPen(pen);
-	painter.setBrush(Qt::NoBrush);
-	painter.drawEllipse(QRectF(9, 8, 14, 14));
-
-	QFont font = qApp->font();
-	font.setBold(true);
-	font.setPixelSize(14);
-	painter.setFont(font);
-	painter.setPen(Qt::white);
-	painter.drawText(QRectF(9, 7, 14, 16), Qt::AlignCenter, QStringLiteral("?"));
 	return QIcon(pixmap);
 }

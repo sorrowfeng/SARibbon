@@ -27,7 +27,6 @@ private:
 	QWidget* createStateOptions(SARibbonPannel* parent);
 	QAbstractButton* createBrandButton(SARibbonBar* ribbon);
 	static QIcon createGlyphIcon(const QString& glyph, const QColor& background, const QColor& foreground);
-	static QIcon createHelpIcon();
 };
 
 #endif  // MODERNBLUESTYLEWINDOW_H
