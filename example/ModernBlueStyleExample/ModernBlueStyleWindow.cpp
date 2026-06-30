@@ -49,7 +49,7 @@ void ModernBlueStyleWindow::buildRibbon()
 	ribbon->setRibbonStyle(SARibbonBar::RibbonStyleCompactThreeRow);
 	ribbon->setTitleVisible(false);
 	ribbon->setTitleBarHeight(48);
-	ribbon->setTabBarHeight(30);
+	ribbon->setTabBarHeight(36);
 	ribbon->setCategoryHeight(100);
 	ribbon->setEnableShowPannelTitle(false);
 	ribbon->setPannelSpacing(8);
@@ -65,12 +65,12 @@ void ModernBlueStyleWindow::buildRibbon()
 	rightGroup->setIconSize(QSize(16, 16));
 	if (QLayout* titleButtonLayout = rightGroup->layout()) {
 		titleButtonLayout->setContentsMargins(0, 0, 0, 0);
-		titleButtonLayout->setSpacing(4);
+		titleButtonLayout->setSpacing(2);
 	}
 	if (QAction* minimumAction = ribbon->minimumModeAction()) {
 		minimumAction->setIcon(QIcon(QStringLiteral(":/SARibbon/image/resource/Titlebar_Shade.png")));
 		if (SARibbonControlButton* button = rightGroup->actionToRibbonControlToolButton(minimumAction)) {
-			button->setFixedSize(32, 30);
+			button->setFixedSize(28, 30);
 		}
 		connect(ribbon, &SARibbonBar::ribbonModeChanged, this, [ minimumAction ](SARibbonBar::RibbonMode mode) {
 			const QString iconPath = (mode == SARibbonBar::MinimumRibbonMode)
@@ -83,7 +83,7 @@ void ModernBlueStyleWindow::buildRibbon()
 	helpAction->setToolTip(QStringLiteral("帮助"));
 	rightGroup->addAction(helpAction);
 	if (SARibbonControlButton* button = rightGroup->actionToRibbonControlToolButton(helpAction)) {
-		button->setFixedSize(32, 30);
+		button->setFixedSize(28, 30);
 	}
 
 	buildMainCategory(ribbon);

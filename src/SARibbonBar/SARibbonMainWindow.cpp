@@ -357,7 +357,7 @@ void SARibbonMainWindow::setRibbonTheme(SARibbonTheme theme)
 		bar->setContentsMargins(ribbonMargins);
 		bar->setProperty("_sa_compact_tabbar_centered", isModernBlue);
 		if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
-			tab->setProperty("_sa_tab_item_height", isModernBlue ? 30 : 0);
+			tab->setProperty("_sa_tab_item_height", isModernBlue ? 36 : 0);
 		}
 		if (isModernBlue) {
 			if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
@@ -366,7 +366,8 @@ void SARibbonMainWindow::setRibbonTheme(SARibbonTheme theme)
 		}
 		if (isModernBlue && d_ptr->mWindowButtonGroup) {
 			d_ptr->mWindowButtonGroup->setButtonWidthStretch(1, 1, 1);
-			d_ptr->mWindowButtonGroup->setWindowButtonWidth(36);
+			d_ptr->mWindowButtonGroup->setWindowButtonWidth(30);
+			d_ptr->mWindowButtonGroup->setProperty("_sa_window_button_height", 30);
 			QResizeEvent resizeEvent(size(), size());
 			QApplication::sendEvent(this, &resizeEvent);
 		}

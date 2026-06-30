@@ -120,20 +120,26 @@ public:
 	void resizeElement(QSize size)
 	{
 		int x = size.width();
+		bool hasButtonHeight = false;
+		int buttonHeight     = q_ptr->property("_sa_window_button_height").toInt(&hasButtonHeight);
+		if (!hasButtonHeight || buttonHeight <= 0 || buttonHeight > size.height()) {
+			buttonHeight = size.height();
+		}
+		const int buttonY = (size.height() - buttonHeight) / 2;
 		if (buttonClose) {
 			int w = closeButtonWidthHint();
 			x -= w;
-			buttonClose->setGeometry(x, 0, w, size.height());
+			buttonClose->setGeometry(x, buttonY, w, buttonHeight);
 		}
 		if (buttonMaximize) {
 			int w = maxButtonWidthHint();
 			x -= w;
-			buttonMaximize->setGeometry(x, 0, w, size.height());
+			buttonMaximize->setGeometry(x, buttonY, w, buttonHeight);
 		}
 		if (buttonMinimize) {
 			int w = minButtonWidthHint();
 			x -= w;
-			buttonMinimize->setGeometry(x, 0, w, size.height());
+			buttonMinimize->setGeometry(x, buttonY, w, buttonHeight);
 		}
 		if (mButtonGroup) {
 			mButtonGroup->setGeometry(0, 0, x, size.height());
