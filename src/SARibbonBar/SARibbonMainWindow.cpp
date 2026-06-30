@@ -6,15 +6,16 @@
 #include <QDebug>
 #include <QFile>
 #include <QHash>
+#include <QResizeEvent>
 #include <QWindowStateChangeEvent>
 #include <QScreen>
 #include <map>
 
 #include "SARibbonSystemButtonBar.h"
+#include "SARibbonButtonGroupWidget.h"
 #include "SARibbonWidget.h"
 #if SARIBBON_USE_3RDPARTY_FRAMELESSHELPER
 #include <QWKWidgets/widgetwindowagent.h>
-#include "SARibbonButtonGroupWidget.h"
 #include "SARibbonQuickAccessBar.h"
 #include "SARibbonStackedWidget.h"
 #else
@@ -102,7 +103,7 @@ void SARibbonMainWindow::PrivateData::updateTabBarMargins(SARibbonTabBar* tab, S
 		{ SARibbonTheme::RibbonThemeOffice2021Blue, { 5, 0, 5, 0 } },
 		{ SARibbonTheme::RibbonThemeFluentUILight, { 5, 0, 0, 0 } },
 		{ SARibbonTheme::RibbonThemeFluentUIDark, { 5, 0, 0, 0 } },
-		{ SARibbonTheme::RibbonThemeModernBlue, { 6, 0, 6, 0 } }
+		{ SARibbonTheme::RibbonThemeModernBlue, { 8, 0, 8, 0 } }
 	};
 	auto it = themeMargins.find(theme);
 	if (it != themeMargins.end()) {
@@ -143,7 +144,7 @@ void SARibbonMainWindow::PrivateData::updateContextColors(SARibbonBar* bar, SARi
 		bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(0, 120, 212); });
 		break;
 	case SARibbonTheme::RibbonThemeModernBlue:
-		bar->setContextCategoryColorList({ QColor(39, 168, 232), QColor(18, 63, 145) });
+		bar->setContextCategoryColorList({ QColor(30, 148, 212), QColor(15, 48, 128) });
 		bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return c.darker(130); });
 		break;
 	default:
@@ -350,6 +351,25 @@ void SARibbonMainWindow::setRibbonTheme(SARibbonTheme theme)
 	sa_set_ribbon_theme(this, theme);
 	d_ptr->mCurrentRibbonTheme = theme;
 	if (SARibbonBar* bar = ribbonBar()) {
+		const bool isModernBlue = (theme == SARibbonTheme::RibbonThemeModernBlue);
+		const QMargins ribbonMargins =
+		    isModernBlue ? QMargins(0, 0, 0, 0) : QMargins(3, 0, 3, 0);
+		bar->setContentsMargins(ribbonMargins);
+		bar->setProperty("_sa_compact_tabbar_centered", isModernBlue);
+		if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
+			tab->setProperty("_sa_tab_item_height", isModernBlue ? 30 : 0);
+		}
+		if (isModernBlue) {
+			if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
+				rightGroup->setIconSize(QSize(16, 16));
+			}
+		}
+		if (isModernBlue && d_ptr->mWindowButtonGroup) {
+			d_ptr->mWindowButtonGroup->setButtonWidthStretch(1, 1, 1);
+			d_ptr->mWindowButtonGroup->setWindowButtonWidth(36);
+			QResizeEvent resizeEvent(size(), size());
+			QApplication::sendEvent(this, &resizeEvent);
+		}
 		// 1. tab bar的间距
 		if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
 			SARibbonMainWindow::PrivateData::updateTabBarMargins(tab, theme);

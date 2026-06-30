@@ -1,6 +1,7 @@
 ﻿#include "SARibbonTabBar.h"
 #include <QStyleOptionTab>
 #include <QFontMetrics>
+#include <QVariant>
 
 SARibbonTabBar::SARibbonTabBar(QWidget* parent) : QTabBar(parent), m_tabMargin(6, 0, 0, 0)
 {
@@ -52,6 +53,13 @@ QSize SARibbonTabBar::tabSizeHint(int index) const
 		padding += 4;
 	}
 	const int textWidth = fm.size(Qt::TextShowMnemonic, opt.text).width();
-    QSize csz           = QSize(textWidth + opt.iconSize.width() + hframe + widgetWidth + padding, height());
+	bool hasTabItemHeight = false;
+	int tabItemHeight     = property("_sa_tab_item_height").toInt(&hasTabItemHeight);
+	if (!hasTabItemHeight || tabItemHeight <= 0) {
+		tabItemHeight = height();
+	} else {
+		tabItemHeight = qMin(tabItemHeight, height());
+	}
+	QSize csz = QSize(textWidth + opt.iconSize.width() + hframe + widgetWidth + padding, tabItemHeight);
     return style()->sizeFromContents(QStyle::CT_TabBarTab, &opt, csz, this);
 }

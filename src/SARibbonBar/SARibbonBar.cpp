@@ -2399,6 +2399,9 @@ void SARibbonBar::resizeStackedContainerWidget()
 
 	int x = border.left();
 	int y = ribbonTabBarGeometry.bottom() + 1;
+	if (isCompactStyle() && property("_sa_compact_tabbar_centered").toBool()) {
+		y = border.top() + titleBarHeight();
+	}
 	int w = width() - border.left() - border.right();
 	int h = d_ptr->categoryHeight();
 	if (d_ptr->mStackedContainerWidget->isPopupMode()) {
@@ -2722,7 +2725,11 @@ void SARibbonBar::resizeInCompactStyle()
 		tabH = validTitleBarHeight;
 	}
 
-	y = y + validTitleBarHeight - tabH;  // 如果tabH较小，则下以，让tab底部和title的底部对齐
+	if (property("_sa_compact_tabbar_centered").toBool()) {
+		y = y + ((validTitleBarHeight - tabH) / 2);
+	} else {
+		y = y + validTitleBarHeight - tabH;  // 如果tabH较小，则下以，让tab底部和title的底部对齐
+	}
 
 	// applicationButton 定位，与TabBar同高
 	if (applicationButton) {

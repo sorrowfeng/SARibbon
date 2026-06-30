@@ -1,5 +1,6 @@
 #include "SARibbonWidget.h"
 #include "SARibbonBar.h"
+#include "SARibbonButtonGroupWidget.h"
 #include "SARibbonTabBar.h"
 #include <QApplication>
 #include <QDebug>
@@ -83,6 +84,16 @@ void SARibbonWidget::setRibbonTheme(SARibbonTheme theme)
 	d_ptr->mCurrentRibbonTheme = theme;
 	if (SARibbonBar* bar = ribbonBar()) {
 		auto theme = ribbonTheme();
+		bar->setContentsMargins(QMargins(0, 0, 0, 0));
+		bar->setProperty("_sa_compact_tabbar_centered", theme == SARibbonTheme::RibbonThemeModernBlue);
+		if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
+			tab->setProperty("_sa_tab_item_height", theme == SARibbonTheme::RibbonThemeModernBlue ? 30 : 0);
+		}
+		if (theme == SARibbonTheme::RibbonThemeModernBlue) {
+			if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
+				rightGroup->setIconSize(QSize(16, 16));
+			}
+		}
 		// 尺寸修正
 		switch (theme) {
 		case SARibbonTheme::RibbonThemeWindows7:
@@ -128,7 +139,7 @@ void SARibbonWidget::setRibbonTheme(SARibbonTheme theme)
 			if (!tab) {
 				break;
 			}
-			tab->setTabMargin(QMargins(6, 0, 6, 0));
+			tab->setTabMargin(QMargins(8, 0, 8, 0));
 		} break;
 		default:
 			break;
@@ -164,7 +175,7 @@ void SARibbonWidget::setRibbonTheme(SARibbonTheme theme)
 			bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(0, 120, 212); });
 			break;
 		case SARibbonTheme::RibbonThemeModernBlue:
-			bar->setContextCategoryColorList(QList< QColor >() << QColor(39, 168, 232) << QColor(18, 63, 145));
+			bar->setContextCategoryColorList(QList< QColor >() << QColor(30, 148, 212) << QColor(15, 48, 128));
 			bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return c.darker(130); });
 			break;
 		default:
