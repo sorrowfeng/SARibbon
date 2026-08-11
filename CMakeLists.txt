@@ -131,7 +131,9 @@ endif()
 ##################################
 
 if(_SARIBBON_USE_FRAMELESS_LIB)
-    if(NOT QWindowKit_DIR)
+    if(TARGET QWKWidgets)
+        # QWindowKit 已由父项目以 add_subdirectory 方式构建,无需 find_package
+    elseif(NOT QWindowKit_DIR)
         message(STATUS "option SARIBBON_USE_FRAMELESS_LIB=ON,but QWindowKit_DIR not defined,will set QWindowKit_DIR=${SARIBBON_LOCAL_INSTALL_BIN_DIR}/lib/cmake/QWindowKit")
         set(__qwk_dir ${SARIBBON_LOCAL_INSTALL_BIN_DIR}/lib/cmake/QWindowKit)
         if(EXISTS ${__qwk_dir})
