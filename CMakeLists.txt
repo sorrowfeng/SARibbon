@@ -13,6 +13,15 @@ project(SARibbon VERSION ${SARIBBON_VERSION} LANGUAGES CXX)
 
 # option(BUILD_SHARED_LIBS "build the SARibbonBar in shared lib mode" ON)
 option(SARIBBON_BUILD_EXAMPLES "build the examples" ON)
+
+# 作为子项目(add_subdirectory)构建时默认关闭安装规则,
+# 避免与父项目的 install/export 相互干扰
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(SARIBBON_STANDALONE_DEFAULT ON)
+else()
+    set(SARIBBON_STANDALONE_DEFAULT OFF)
+endif()
+option(SARIBBON_ENABLE_INSTALL "Install SARibbonBar" ${SARIBBON_STANDALONE_DEFAULT})
 # frameless能提供windows的窗口特效，如边缘吸附，且对高分屏多屏幕的支持更好,默认开启
 option(SARIBBON_USE_FRAMELESS_LIB "Using the QWindowKit library as a frameless solution" OFF)
 # frameless能提供windows的窗口特效，如边缘吸附，且对高分屏多屏幕的支持更好,默认开启
