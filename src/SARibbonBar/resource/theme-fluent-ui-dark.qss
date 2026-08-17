@@ -273,7 +273,7 @@ SARibbonComboBox::drop-down:hover {
     background-color: #2e2e2e;
 }
 SARibbonComboBox::down-arrow {
-    image: url(:/SARibbon/image/resource/ArrowDown.png);
+    image: url(:/SARibbon/image/resource/ArrowDown-w.png);
 }
 
 /*SARibbonCategoryScrollButton*/

@@ -281,7 +281,7 @@ SARibbonComboBox::drop-down:hover {
     background-color: #eaf5ff;
 }
 SARibbonComboBox::down-arrow {
-    image: url(:/SARibbon/image/resource/ArrowDown.png);
+    image: url(:/SARibbon/image/resource/ArrowDown-w.png);
 }
 
 QRadioButton,
