@@ -324,6 +324,8 @@ void sa_configure_ribbon_theme_options(SARibbonBar* bar, SARibbonTheme theme, SA
 	const bool isModernBlue = (theme == SARibbonTheme::RibbonThemeModernBlue);
 	bar->setCompactTabBarCentered(isModernBlue);
 	bar->setStackedTopGap(isModernBlue ? 2 : 0);
+	// 深色标题栏主题刷新隐藏ribbon按钮图标(白色箭头)
+	bar->updateMinimumModeButtonIcon(theme);
 	if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
 		tab->setTabItemHeight(isModernBlue ? 36 : 0);
 	}

@@ -245,6 +245,12 @@ public:
 	// 是否显示隐藏ribbon按钮
 	bool haveShowMinimumModeButton() const;
 
+	// 按主题刷新隐藏ribbon按钮图标(深色标题栏主题用白色箭头)
+	void updateMinimumModeButtonIcon(SARibbonTheme theme);
+
+	// 隐藏ribbon按钮的图标(按主题/状态取色)
+	QIcon minimumModeButtonIcon(SARibbonTheme theme, bool isMinimumMode) const;
+
 	// 隐藏ribbon对应的action
 	QAction* minimumModeAction() const;
 

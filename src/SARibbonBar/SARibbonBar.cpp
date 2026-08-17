@@ -67,6 +67,7 @@ public:
 	QPointer< SARibbonButtonGroupWidget > mRightButtonGroup;  ///< 在tab bar右边的按钮群
 	QPointer< SARibbonQuickAccessBar > mQuickAccessBar;       ///< 快速响应栏
 	QAction* mMinimumCategoryButtonAction { nullptr };        ///< 隐藏面板按钮action
+	SARibbonTheme mCurrentRibbonTheme { SARibbonTheme::RibbonThemeOffice2013 };  ///< 当前主题(用于最小化按钮图标取色)
 	QList< _SAContextCategoryManagerData > mCurrentShowingContextCategory;
 	QList< SARibbonContextCategory* > mContextCategoryList;  ///< 存放所有的上下文标签
 	QList< _SARibbonTabData > mHidedCategory;
@@ -1143,14 +1144,11 @@ void SARibbonBar::showMinimumModeButton(bool isShow)
 		activeRightButtonGroup();
 
 		d_ptr->mMinimumCategoryButtonAction = new QAction(this);
-		d_ptr->mMinimumCategoryButtonAction->setIcon(
-		    style()->standardIcon(isMinimumMode() ? QStyle::SP_TitleBarUnshadeButton : QStyle::SP_TitleBarShadeButton,
-		                          nullptr));
+		d_ptr->mMinimumCategoryButtonAction->setIcon(minimumModeButtonIcon(d_ptr->mCurrentRibbonTheme, isMinimumMode()));
 		connect(d_ptr->mMinimumCategoryButtonAction, &QAction::triggered, this, [ this ]() {
 			this->setMinimumMode(!isMinimumMode());
 			this->d_ptr->mMinimumCategoryButtonAction->setIcon(
-			    style()->standardIcon(isMinimumMode() ? QStyle::SP_TitleBarUnshadeButton : QStyle::SP_TitleBarShadeButton,
-			                          nullptr));
+			    minimumModeButtonIcon(this->d_ptr->mCurrentRibbonTheme, this->isMinimumMode()));
 		});
 		d_ptr->mRightButtonGroup->addAction(d_ptr->mMinimumCategoryButtonAction);
 
@@ -1172,6 +1170,37 @@ void SARibbonBar::showMinimumModeButton(bool isShow)
 bool SARibbonBar::haveShowMinimumModeButton() const
 {
 	return (nullptr != d_ptr->mMinimumCategoryButtonAction);
+}
+
+/**
+ * @brief 按主题刷新隐藏ribbon按钮图标
+ *
+ * 深色标题栏主题(FluentUIDark/Dark/Dark2/ModernBlue)下标准 shade 图标为黑色,
+ * 在深色背景上不可见,改用白色箭头资源
+ * @param theme
+ */
+void SARibbonBar::updateMinimumModeButtonIcon(SARibbonTheme theme)
+{
+	d_ptr->mCurrentRibbonTheme = theme;
+	if (nullptr == d_ptr->mMinimumCategoryButtonAction) {
+		return;
+	}
+	d_ptr->mMinimumCategoryButtonAction->setIcon(minimumModeButtonIcon(theme, isMinimumMode()));
+}
+
+QIcon SARibbonBar::minimumModeButtonIcon(SARibbonTheme theme, bool isMinimumMode) const
+{
+	switch (theme) {
+	case SARibbonTheme::RibbonThemeFluentUIDark:
+	case SARibbonTheme::RibbonThemeDark:
+	case SARibbonTheme::RibbonThemeDark2:
+	case SARibbonTheme::RibbonThemeModernBlue:
+		return QIcon(QStringLiteral(":/SARibbon/image/resource/") +
+		             (isMinimumMode ? QStringLiteral("ArrowUp-w.png") : QStringLiteral("ArrowDown-w.png")));
+	default:
+		break;
+	}
+	return style()->standardIcon(isMinimumMode ? QStyle::SP_TitleBarUnshadeButton : QStyle::SP_TitleBarShadeButton, nullptr);
 }
 
 /**
