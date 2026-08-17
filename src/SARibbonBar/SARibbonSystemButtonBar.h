@@ -45,6 +45,10 @@ public:
     // 设置标准系统按钮的宽度
     void setWindowButtonWidth(int w);
     int windowButtonWidth() const;
+    // ModernBlue 等主题的窗口按钮布局参数，传入负值表示恢复默认
+    void setWindowButtonLayout(int rightMargin, int spacing, int height);
+    void resetWindowButtonLayout();
+    void updateButtonLayout();
     // 设置Qt::WindowStates
     void setWindowStates(Qt::WindowStates s);
     // 仅获取按钮的状态

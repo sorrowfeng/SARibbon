@@ -99,6 +99,8 @@ public:
 	SARibbonMainWindowStyles mMainWindowStyle;                   ///< 记录MainWindow的样式
 	FpContextCategoryHighlight mFpContextHighlight { nullptr };  ///< 上下文标签高亮
 	bool mEnableTabDoubleClickToMinimumMode { true };            ///< 是否允许tab双击激活ribbon的最小化模式
+	bool mCompactTabBarCentered { false };                       ///< ModernBlue: tabbar 垂直居中
+	int mStackedTopGap { 0 };                                    ///< ModernBlue: stacked widget 顶部间距
 public:
 	PrivateData(SARibbonBar* par) : q_ptr(par)
 	{
@@ -1134,6 +1136,10 @@ bool SARibbonBar::isMinimumMode() const
 void SARibbonBar::showMinimumModeButton(bool isShow)
 {
 	if (isShow) {
+		if (nullptr != d_ptr->mMinimumCategoryButtonAction) {
+			// 已经显示，避免重复添加按钮
+			return;
+		}
 		activeRightButtonGroup();
 
 		d_ptr->mMinimumCategoryButtonAction = new QAction(this);
@@ -1933,6 +1939,26 @@ QSize SARibbonBar::pannelToolButtonIconSize() const
 	return d_ptr->mPannelToolButtonSize;
 }
 
+void SARibbonBar::setCompactTabBarCentered(bool centered)
+{
+	d_ptr->mCompactTabBarCentered = centered;
+}
+
+bool SARibbonBar::isCompactTabBarCentered() const
+{
+	return d_ptr->mCompactTabBarCentered;
+}
+
+void SARibbonBar::setStackedTopGap(int gap)
+{
+	d_ptr->mStackedTopGap = qMax(0, gap);
+}
+
+int SARibbonBar::stackedTopGap() const
+{
+	return d_ptr->mStackedTopGap;
+}
+
 /**
  * @brief ribbonbar内部的StackedWidget
  * 所有的category都放置在StackedWidget中
@@ -2399,12 +2425,10 @@ void SARibbonBar::resizeStackedContainerWidget()
 
 	int x = border.left();
 	int y = ribbonTabBarGeometry.bottom() + 1;
-	if (isCompactStyle() && property("_sa_compact_tabbar_centered").toBool()) {
+	if (isCompactStyle() && d_ptr->mCompactTabBarCentered) {
 		y = border.top() + titleBarHeight();
-		bool hasStackedTopGap = false;
-		int stackedTopGap     = property("_sa_stacked_top_gap").toInt(&hasStackedTopGap);
-		if (hasStackedTopGap && stackedTopGap > 0) {
-			y += stackedTopGap;
+		if (d_ptr->mStackedTopGap > 0) {
+			y += d_ptr->mStackedTopGap;
 		}
 	}
 	int w = width() - border.left() - border.right();
@@ -2730,7 +2754,7 @@ void SARibbonBar::resizeInCompactStyle()
 		tabH = validTitleBarHeight;
 	}
 
-	if (property("_sa_compact_tabbar_centered").toBool()) {
+	if (d_ptr->mCompactTabBarCentered) {
 		y = y + ((validTitleBarHeight - tabH) / 2);
 	} else {
 		y = y + validTitleBarHeight - tabH;  // 如果tabH较小，则下以，让tab底部和title的底部对齐

@@ -3899,6 +3899,20 @@ private Q_SLOTS:
  * @param theme
  */
 void SA_RIBBON_EXPORT sa_set_ribbon_theme(QWidget* w, SARibbonTheme theme);
+/**
+ * @brief 根据主题应用/恢复SARibbonBar的整体布局参数
+ *
+ * 部分主题（如RibbonThemeModernBlue）除了qss外，还需要配套的布局参数才能达到预期效果，
+ * 此函数把这些参数内置到主题切换中，且只影响ModernBlue主题：
+ * - 切入RibbonThemeModernBlue时，先备份当前布局，再应用ModernBlue的标题栏布局（隐藏标题、tab及pannel居中等），
+ *   不改变ribbon风格及pannel内部元素的尺寸
+ * - 从ModernBlue切出到其他主题时，恢复切入前备份的布局
+ * - 其他主题之间的切换不做任何布局改动
+ *
+ * @param bar
+ * @param theme
+ */
+void SA_RIBBON_EXPORT sa_apply_ribbon_theme_layout(SARibbonBar* bar, SARibbonTheme theme);
 #endif  // SARIBBONWIDGET_H
 
 /*** End of inlined file: SARibbonWidget.h ***/

@@ -1,10 +1,13 @@
 #include "SARibbonWidget.h"
 #include "SARibbonBar.h"
 #include "SARibbonButtonGroupWidget.h"
+#include "SARibbonSystemButtonBar.h"
 #include "SARibbonTabBar.h"
 #include <QApplication>
 #include <QDebug>
 #include <QFile>
+#include <QHash>
+#include <QLayout>
 #include <QScreen>
 
 /**
@@ -85,16 +88,9 @@ void SARibbonWidget::setRibbonTheme(SARibbonTheme theme)
 	if (SARibbonBar* bar = ribbonBar()) {
 		auto theme = ribbonTheme();
 		bar->setContentsMargins(QMargins(0, 0, 0, 0));
-		bar->setProperty("_sa_compact_tabbar_centered", theme == SARibbonTheme::RibbonThemeModernBlue);
-		bar->setProperty("_sa_stacked_top_gap", theme == SARibbonTheme::RibbonThemeModernBlue ? 2 : 0);
-		if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
-			tab->setProperty("_sa_tab_item_height", theme == SARibbonTheme::RibbonThemeModernBlue ? 36 : 0);
-		}
-		if (theme == SARibbonTheme::RibbonThemeModernBlue) {
-			if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
-				rightGroup->setIconSize(QSize(16, 16));
-			}
-		}
+		// 应用/恢复主题配套的布局参数
+		sa_apply_ribbon_theme_layout(bar, theme);
+		sa_configure_ribbon_theme_options(bar, theme);
 		// 尺寸修正
 		switch (theme) {
 		case SARibbonTheme::RibbonThemeWindows7:
@@ -276,43 +272,119 @@ void SARibbonWidget::onPrimaryScreenChanged(QScreen* screen)
 
 void sa_set_ribbon_theme(QWidget* w, SARibbonTheme theme)
 {
-    QFile file;
-    switch (theme) {
-    case SARibbonTheme::RibbonThemeWindows7:
-        file.setFileName(":/theme/resource/theme-win7.qss");
-        break;
-    case SARibbonTheme::RibbonThemeOffice2013:
-        file.setFileName(":/theme/resource/theme-office2013.qss");
-        break;
-    case SARibbonTheme::RibbonThemeOffice2016Blue:
-        file.setFileName(":/theme/resource/theme-office2016-blue.qss");
-        break;
-    case SARibbonTheme::RibbonThemeOffice2021Blue:
-        file.setFileName(":/theme/resource/theme-office2021-blue.qss");
-        break;
-    case SARibbonTheme::RibbonThemeDark:
-        file.setFileName(":/theme/resource/theme-dark.qss");
-        break;
-    case SARibbonTheme::RibbonThemeDark2:
-        file.setFileName(":/theme/resource/theme-dark2.qss");
-		break;
-	case SARibbonTheme::RibbonThemeFluentUILight:
-		file.setFileName(":/theme/resource/theme-fluent-ui-light.qss");
-		break;
-	case SARibbonTheme::RibbonThemeFluentUIDark:
-		file.setFileName(":/theme/resource/theme-fluent-ui-dark.qss");
-		break;
-	case SARibbonTheme::RibbonThemeModernBlue:
-		file.setFileName(":/theme/resource/theme-modern-blue.qss");
-		break;
-    default:
-        file.setFileName(":/theme/resource/theme-office2013.qss");
-        break;
-    }
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return;
-    }
-    // 有反馈用qstring接住文件内容，再设置进去才能生效（qt5.7版本）
-    QString qss = QString::fromUtf8(file.readAll());
-    w->setStyleSheet(qss);
+	static QHash< int, QString > qssCache;
+	const int themeKey = static_cast< int >(theme);
+	if (!qssCache.contains(themeKey)) {
+		QFile file;
+		switch (theme) {
+		case SARibbonTheme::RibbonThemeWindows7:
+			file.setFileName(":/theme/resource/theme-win7.qss");
+			break;
+		case SARibbonTheme::RibbonThemeOffice2013:
+			file.setFileName(":/theme/resource/theme-office2013.qss");
+			break;
+		case SARibbonTheme::RibbonThemeOffice2016Blue:
+			file.setFileName(":/theme/resource/theme-office2016-blue.qss");
+			break;
+		case SARibbonTheme::RibbonThemeOffice2021Blue:
+			file.setFileName(":/theme/resource/theme-office2021-blue.qss");
+			break;
+		case SARibbonTheme::RibbonThemeDark:
+			file.setFileName(":/theme/resource/theme-dark.qss");
+			break;
+		case SARibbonTheme::RibbonThemeDark2:
+			file.setFileName(":/theme/resource/theme-dark2.qss");
+			break;
+		case SARibbonTheme::RibbonThemeFluentUILight:
+			file.setFileName(":/theme/resource/theme-fluent-ui-light.qss");
+			break;
+		case SARibbonTheme::RibbonThemeFluentUIDark:
+			file.setFileName(":/theme/resource/theme-fluent-ui-dark.qss");
+			break;
+		case SARibbonTheme::RibbonThemeModernBlue:
+			file.setFileName(":/theme/resource/theme-modern-blue.qss");
+			break;
+		default:
+			file.setFileName(":/theme/resource/theme-office2013.qss");
+			break;
+		}
+		if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+			return;
+		}
+		qssCache.insert(themeKey, QString::fromUtf8(file.readAll()));
+	}
+	w->setStyleSheet(qssCache.value(themeKey));
+}
+
+void sa_configure_ribbon_theme_options(SARibbonBar* bar, SARibbonTheme theme, SARibbonSystemButtonBar* windowButtonGroup)
+{
+	if (!bar) {
+		return;
+	}
+	const bool isModernBlue = (theme == SARibbonTheme::RibbonThemeModernBlue);
+	bar->setCompactTabBarCentered(isModernBlue);
+	bar->setStackedTopGap(isModernBlue ? 2 : 0);
+	if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
+		tab->setTabItemHeight(isModernBlue ? 36 : 0);
+	}
+	if (isModernBlue) {
+		if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
+			rightGroup->setIconSize(QSize(16, 16));
+		}
+	}
+	if (!windowButtonGroup) {
+		return;
+	}
+	if (isModernBlue) {
+		windowButtonGroup->setButtonWidthStretch(1, 1, 1);
+		windowButtonGroup->setWindowButtonWidth(28);
+		windowButtonGroup->setWindowButtonLayout(12, 4, 30);
+	} else {
+		windowButtonGroup->resetWindowButtonLayout();
+	}
+}
+
+void sa_apply_ribbon_theme_layout(SARibbonBar* bar, SARibbonTheme theme)
+{
+	if (!bar) {
+		return;
+	}
+	// 是否已应用ModernBlue布局的标记，只有应用过ModernBlue布局，切出时才需要恢复
+	const char* appliedProp = "_sa_theme_layout_modernblue";
+	if (theme == SARibbonTheme::RibbonThemeModernBlue) {
+		if (!bar->property(appliedProp).toBool()) {
+			// 首次切入ModernBlue前备份当前布局，切出时恢复
+			bar->setProperty("_sa_layout_bak_titlevisible", bar->isTitleVisible());
+			bar->setProperty("_sa_layout_bak_titlebarheight", bar->titleBarHeight());
+			bar->setProperty("_sa_layout_bak_tabbarheight", bar->tabBarHeight());
+			bar->setProperty("_sa_layout_bak_ribbonalignment", static_cast< int >(bar->ribbonAlignment()));
+			bar->setProperty("_sa_layout_bak_pannelalignment", static_cast< int >(bar->pannelAlignment()));
+			bar->setProperty("_sa_layout_bak_minbutton", bar->haveShowMinimumModeButton());
+			bar->setProperty(appliedProp, true);
+		}
+		// ModernBlue主题只调整标题栏/tab栏：隐藏标题，tab及pannel居中
+		// 不改变ribbon风格及pannel内部元素的尺寸（图标大小、按钮宽高、pannel间距等保持原样）
+		bar->setTitleVisible(false);
+		bar->setTitleBarHeight(48);
+		bar->setTabBarHeight(36);
+		bar->setRibbonAlignment(SARibbonAlignment::AlignCenter);
+		bar->setPannelAlignment(SARibbonAlignment::AlignCenter);
+		bar->showMinimumModeButton(true);
+		if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
+			if (QLayout* lay = rightGroup->layout()) {
+				lay->setContentsMargins(0, 0, 0, 0);
+				lay->setSpacing(2);
+			}
+		}
+	} else if (bar->property(appliedProp).toBool()) {
+		// 从ModernBlue切出，恢复切入前备份的布局
+		bar->setTitleVisible(bar->property("_sa_layout_bak_titlevisible").toBool());
+		bar->setTitleBarHeight(bar->property("_sa_layout_bak_titlebarheight").toInt());
+		bar->setTabBarHeight(bar->property("_sa_layout_bak_tabbarheight").toInt());
+		bar->setRibbonAlignment(static_cast< SARibbonAlignment >(bar->property("_sa_layout_bak_ribbonalignment").toInt()));
+		bar->setPannelAlignment(static_cast< SARibbonAlignment >(bar->property("_sa_layout_bak_pannelalignment").toInt()));
+		bar->showMinimumModeButton(bar->property("_sa_layout_bak_minbutton").toBool());
+		bar->setProperty(appliedProp, false);
+	}
+	// 其他主题之间的切换不做任何布局改动
 }

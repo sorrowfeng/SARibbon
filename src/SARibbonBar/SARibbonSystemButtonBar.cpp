@@ -27,6 +27,9 @@ public:
 	int mMinStretch { 3 };
 	int mWindowButtonWidth { 35 };
 	int mTitleBarHeight { 28 };
+	int mButtonRightMargin { -1 };
+	int mButtonSpacing { -1 };
+	int mButtonHeight { -1 };
 	Qt::WindowFlags mFlags { Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint };
 	SARibbonButtonGroupWidget* mButtonGroup;
 
@@ -119,22 +122,13 @@ public:
 
 	void resizeElement(QSize size)
 	{
-		bool hasButtonRightMargin = false;
-		int buttonRightMargin = q_ptr->property("_sa_window_button_right_margin").toInt(&hasButtonRightMargin);
-		if (!hasButtonRightMargin || buttonRightMargin < 0) {
-			buttonRightMargin = 0;
-		}
-		bool hasButtonSpacing = false;
-		int buttonSpacing = q_ptr->property("_sa_window_button_spacing").toInt(&hasButtonSpacing);
-		if (!hasButtonSpacing || buttonSpacing < 0) {
-			buttonSpacing = 0;
-		}
-		int x = size.width() - buttonRightMargin;
-		bool hasButtonHeight = false;
-		int buttonHeight     = q_ptr->property("_sa_window_button_height").toInt(&hasButtonHeight);
-		if (!hasButtonHeight || buttonHeight <= 0 || buttonHeight > size.height()) {
+		const int buttonRightMargin = (mButtonRightMargin >= 0) ? mButtonRightMargin : 0;
+		const int buttonSpacing     = (mButtonSpacing >= 0) ? mButtonSpacing : 0;
+		int buttonHeight            = (mButtonHeight > 0) ? mButtonHeight : size.height();
+		if (buttonHeight > size.height()) {
 			buttonHeight = size.height();
 		}
+		int x = size.width() - buttonRightMargin;
 		const int buttonY = (size.height() - buttonHeight) / 2;
 		if (buttonClose) {
 			int w = closeButtonWidthHint();
@@ -200,15 +194,12 @@ public:
 		visibleButtonCount += buttonClose ? 1 : 0;
 		visibleButtonCount += buttonMaximize ? 1 : 0;
 		visibleButtonCount += buttonMinimize ? 1 : 0;
-		bool hasButtonRightMargin = false;
-		const int buttonRightMargin =
-		    qMax(0, q_ptr->property("_sa_window_button_right_margin").toInt(&hasButtonRightMargin));
-		if (hasButtonRightMargin) {
+		const int buttonRightMargin = (mButtonRightMargin >= 0) ? mButtonRightMargin : 0;
+		if (buttonRightMargin > 0) {
 			res.rwidth() += buttonRightMargin;
 		}
-		bool hasButtonSpacing = false;
-		const int buttonSpacing = qMax(0, q_ptr->property("_sa_window_button_spacing").toInt(&hasButtonSpacing));
-		if (hasButtonSpacing && visibleButtonCount > 1) {
+		const int buttonSpacing = (mButtonSpacing >= 0) ? mButtonSpacing : 0;
+		if (buttonSpacing > 0 && visibleButtonCount > 1) {
 			res.rwidth() += buttonSpacing * (visibleButtonCount - 1);
 		}
 		return res;
@@ -334,6 +325,27 @@ void SARibbonSystemButtonBar::setWindowButtonWidth(int w)
 int SARibbonSystemButtonBar::windowButtonWidth() const
 {
 	return d_ptr->mWindowButtonWidth;
+}
+
+void SARibbonSystemButtonBar::setWindowButtonLayout(int rightMargin, int spacing, int height)
+{
+	d_ptr->mButtonRightMargin = rightMargin;
+	d_ptr->mButtonSpacing     = spacing;
+	d_ptr->mButtonHeight      = height;
+	d_ptr->updateSize();
+}
+
+void SARibbonSystemButtonBar::resetWindowButtonLayout()
+{
+	d_ptr->mButtonRightMargin = -1;
+	d_ptr->mButtonSpacing     = -1;
+	d_ptr->mButtonHeight      = -1;
+	d_ptr->updateSize();
+}
+
+void SARibbonSystemButtonBar::updateButtonLayout()
+{
+	d_ptr->updateSize();
 }
 
 /**

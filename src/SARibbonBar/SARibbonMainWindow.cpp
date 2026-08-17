@@ -355,22 +355,11 @@ void SARibbonMainWindow::setRibbonTheme(SARibbonTheme theme)
 		const QMargins ribbonMargins =
 		    isModernBlue ? QMargins(0, 0, 0, 0) : QMargins(3, 0, 3, 0);
 		bar->setContentsMargins(ribbonMargins);
-		bar->setProperty("_sa_compact_tabbar_centered", isModernBlue);
-		bar->setProperty("_sa_stacked_top_gap", isModernBlue ? 2 : 0);
-		if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
-			tab->setProperty("_sa_tab_item_height", isModernBlue ? 36 : 0);
-		}
-		if (isModernBlue) {
-			if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
-				rightGroup->setIconSize(QSize(16, 16));
-			}
-		}
+		// 应用/恢复主题配套的布局参数
+		sa_apply_ribbon_theme_layout(bar, theme);
+		sa_configure_ribbon_theme_options(bar, theme, d_ptr->mWindowButtonGroup);
 		if (isModernBlue && d_ptr->mWindowButtonGroup) {
-			d_ptr->mWindowButtonGroup->setButtonWidthStretch(1, 1, 1);
-			d_ptr->mWindowButtonGroup->setWindowButtonWidth(28);
-			d_ptr->mWindowButtonGroup->setProperty("_sa_window_button_height", 30);
-			d_ptr->mWindowButtonGroup->setProperty("_sa_window_button_spacing", 4);
-			d_ptr->mWindowButtonGroup->setProperty("_sa_window_button_right_margin", 12);
+			bar->updateRibbonGeometry();
 			QResizeEvent resizeEvent(size(), size());
 			QApplication::sendEvent(this, &resizeEvent);
 		}

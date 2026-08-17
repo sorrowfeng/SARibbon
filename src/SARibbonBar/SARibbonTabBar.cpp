@@ -1,7 +1,6 @@
 ﻿#include "SARibbonTabBar.h"
 #include <QStyleOptionTab>
 #include <QFontMetrics>
-#include <QVariant>
 
 SARibbonTabBar::SARibbonTabBar(QWidget* parent) : QTabBar(parent), m_tabMargin(6, 0, 0, 0)
 {
@@ -20,6 +19,16 @@ const QMargins& SARibbonTabBar::tabMargin() const
 void SARibbonTabBar::setTabMargin(const QMargins& tabMargin)
 {
 	m_tabMargin = tabMargin;
+}
+
+void SARibbonTabBar::setTabItemHeight(int height)
+{
+	mTabItemHeight = qMax(0, height);
+}
+
+int SARibbonTabBar::tabItemHeight() const
+{
+	return mTabItemHeight;
 }
 
 /**
@@ -53,16 +62,10 @@ QSize SARibbonTabBar::tabSizeHint(int index) const
 		padding += 4;
 	}
 	const int textWidth = fm.size(Qt::TextShowMnemonic, opt.text).width();
-	bool hasTabItemHeight = false;
-	int tabItemHeight     = property("_sa_tab_item_height").toInt(&hasTabItemHeight);
-	if (!hasTabItemHeight || tabItemHeight <= 0) {
-		tabItemHeight = height();
-	} else {
-		tabItemHeight = qMin(tabItemHeight, height());
-	}
+	const int tabItemHeight = (mTabItemHeight > 0) ? qMin(mTabItemHeight, height()) : height();
 	QSize csz = QSize(textWidth + opt.iconSize.width() + hframe + widgetWidth + padding, tabItemHeight);
 	QSize hint = style()->sizeFromContents(QStyle::CT_TabBarTab, &opt, csz, this);
-	if (hasTabItemHeight && tabItemHeight > 0) {
+	if (mTabItemHeight > 0) {
 		hint.setHeight(tabItemHeight);
 	}
     return hint;

@@ -361,6 +361,12 @@ public:
 	void setPannelToolButtonIconSize(const QSize& s);
 	QSize pannelToolButtonIconSize() const;
 
+	// ModernBlue 等主题专用的 tabbar 布局参数
+	void setCompactTabBarCentered(bool centered);
+	bool isCompactTabBarCentered() const;
+	void setStackedTopGap(int gap);
+	int stackedTopGap() const;
+
 	// 获取SARibbonStackedWidget，谨慎使用此函数
 	SARibbonStackedWidget* ribbonStackedWidget();
 

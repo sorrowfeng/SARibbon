@@ -15,12 +15,16 @@ public:
     ~SARibbonTabBar();
 	const QMargins& tabMargin() const;
 	void setTabMargin(const QMargins& tabMargin);
+	// 0 表示使用 tabbar 默认高度
+	void setTabItemHeight(int height);
+	int tabItemHeight() const;
 
 protected:
 	QSize tabSizeHint(int index) const;
 
 private:
 	QMargins m_tabMargin;
+	int mTabItemHeight { 0 };
 };
 
 #endif  // SARIBBONTABBAR_H
