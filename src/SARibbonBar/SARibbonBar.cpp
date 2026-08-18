@@ -1190,17 +1190,39 @@ void SARibbonBar::updateMinimumModeButtonIcon(SARibbonTheme theme)
 
 QIcon SARibbonBar::minimumModeButtonIcon(SARibbonTheme theme, bool isMinimumMode) const
 {
+	const QStyle::StandardPixmap sp =
+	    isMinimumMode ? QStyle::SP_TitleBarUnshadeButton : QStyle::SP_TitleBarShadeButton;
+	QIcon base = style()->standardIcon(sp, nullptr);
 	switch (theme) {
 	case SARibbonTheme::RibbonThemeFluentUIDark:
 	case SARibbonTheme::RibbonThemeDark:
 	case SARibbonTheme::RibbonThemeDark2:
-	case SARibbonTheme::RibbonThemeModernBlue:
-		return QIcon(QStringLiteral(":/SARibbon/image/resource/") +
-		             (isMinimumMode ? QStringLiteral("ArrowUp-w.png") : QStringLiteral("ArrowDown-w.png")));
+	case SARibbonTheme::RibbonThemeModernBlue: {
+		// 与浅色主题同一标准图标,仅反白(SourceIn 保留 alpha 形状):
+		// 几何与尺寸和浅色主题完全一致,避免位图按 iconSize 放大失真
+		QIcon whiteIcon;
+		for (int size : {16, 20, 24, 32}) {
+			QImage image = base.pixmap(size, size)
+			                   .toImage()
+			                   .convertToFormat(QImage::Format_ARGB32_Premultiplied);
+			if (image.isNull()) {
+				continue;
+			}
+			QPainter painter(&image);
+			painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+			painter.fillRect(image.rect(), Qt::white);
+			painter.end();
+			whiteIcon.addPixmap(QPixmap::fromImage(image));
+		}
+		if (!whiteIcon.isNull()) {
+			return whiteIcon;
+		}
+		return base;
+	}
 	default:
 		break;
 	}
-	return style()->standardIcon(isMinimumMode ? QStyle::SP_TitleBarUnshadeButton : QStyle::SP_TitleBarShadeButton, nullptr);
+	return base;
 }
 
 /**
