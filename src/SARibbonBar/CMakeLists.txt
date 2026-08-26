@@ -164,7 +164,11 @@ message(STATUS "link ${SARIBBON_LIB_NAME} PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt$
 # Qt X11Extras was first introduced in 5.1 and got removed in 6.0
 # But it was again brought back as a private feature of QtGui in 6.2
 if(_SARIBBON_USE_FRAMELESS_LIB)
-    find_package(QWindowKit REQUIRED)
+    # QWindowKit 已由父项目以 add_subdirectory 方式构建时,
+    # 直接使用构建树内 target(qwk_add_library 已创建 QWindowKit::Widgets 别名)
+    if(NOT TARGET QWindowKit::Widgets)
+        find_package(QWindowKit REQUIRED)
+    endif()
     target_link_libraries(${SARIBBON_LIB_NAME} PRIVATE QWindowKit::Widgets)
     message(STATUS "link ${SARIBBON_LIB_NAME} PRIVATE QWindowKit::Widgets")
 endif()
@@ -177,6 +181,7 @@ set_target_properties(${SARIBBON_LIB_NAME} PROPERTIES
     CXX_EXTENSIONS OFF
     DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX}
     VERSION ${SARIBBON_VERSION}
+    SOVERSION ${SARIBBON_VERSION_MAJOR}.${SARIBBON_VERSION_MINOR}
     EXPORT_NAME ${SARIBBON_LIB_NAME}
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
@@ -219,8 +224,19 @@ else()
     message(STATUS "macros predefined:#define SARIBBON_USE_3RDPARTY_FRAMELESSHELPER 0")
 endif()
 
+# 兼容 <SARibbonBar/X.h> 包含方式:头文件在本目录平铺,
+# 在构建目录生成一层带包名的 include 目录(优先符号链接,无权限时退化为复制)
+set(SARIBBON_COMPAT_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/compat_include")
+if(NOT EXISTS "${SARIBBON_COMPAT_INCLUDE_DIR}/${SARIBBON_LIB_NAME}")
+    file(MAKE_DIRECTORY "${SARIBBON_COMPAT_INCLUDE_DIR}")
+    file(CREATE_LINK "${CMAKE_CURRENT_LIST_DIR}"
+         "${SARIBBON_COMPAT_INCLUDE_DIR}/${SARIBBON_LIB_NAME}"
+         COPY_ON_ERROR SYMBOLIC)
+endif()
+
 target_include_directories(${SARIBBON_LIB_NAME} PUBLIC
     $<INSTALL_INTERFACE:include/${SARIBBON_LIB_NAME}>
+    $<BUILD_INTERFACE:${SARIBBON_COMPAT_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
 )
 if(MSVC)
@@ -272,6 +288,7 @@ find_package(Qt${QT_VERSION_MAJOR}LinguistTools QUIET)
 endif()
 # ------------------------------- install script -------------------------------
 
+if(SARIBBON_ENABLE_INSTALL)
 # 头文件
 install(FILES
     ${SARIBBON_HEADER_FILES}
@@ -334,6 +351,7 @@ install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/${SARIBBON_LIB_NAME}ConfigVersion.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${SARIBBON_LIB_NAME}
 )
+endif()
 
 # 资源文件生成
 

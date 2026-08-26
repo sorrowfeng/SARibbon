@@ -25,6 +25,10 @@ public:
 	const QMargins& tabMargin() const;
 	/// Sets the tab margin
 	void setTabMargin(const QMargins& tabMargin);
+	/// Set the tab item height, 0 means using the default tabbar height
+	void setTabItemHeight(int height);
+	/// Get the tab item height
+	int tabItemHeight() const;
 
 protected:
 	/// Estimates the size of a tab
@@ -32,6 +36,7 @@ protected:
 
 private:
 	QMargins m_tabMargin;
+	int mTabItemHeight { 0 };
 };
 
 #endif  // SARIBBONTABBAR_H

@@ -15,6 +15,15 @@ project(SARibbon VERSION ${SARIBBON_VERSION} LANGUAGES CXX)
 option(SARIBBON_BUILD_STATIC_LIBS "build the SARibbonBar in static lib mode" OFF)
 option(SARIBBON_BUILD_EXAMPLES "build the examples" ON)
 option(BUILD_TESTS "Build unit tests" OFF)
+
+# 作为子项目(add_subdirectory)构建时默认关闭安装规则,
+# 避免与父项目的 install/export 相互干扰
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(SARIBBON_STANDALONE_DEFAULT ON)
+else()
+    set(SARIBBON_STANDALONE_DEFAULT OFF)
+endif()
+option(SARIBBON_ENABLE_INSTALL "Install SARibbonBar" ${SARIBBON_STANDALONE_DEFAULT})
 # frameless能提供windows的窗口特效，如边缘吸附，且对高分屏多屏幕的支持更好,默认开启
 option(SARIBBON_USE_FRAMELESS_LIB "Using the QWindowKit library as a frameless solution" OFF)
 # frameless能提供windows的窗口特效，如边缘吸附，且对高分屏多屏幕的支持更好,默认开启
@@ -156,6 +165,10 @@ endif()
 # 对于开发者，可以在配置时指定路径：
 # cmake -DQWindowKit_DIR={path-to-qwindowkit/lib/cmake/QWindowKit}
 if(_SARIBBON_USE_FRAMELESS_LIB)
+    # QWindowKit 已由父项目以 add_subdirectory 方式构建时,跳过 find_package 探测
+    if(TARGET QWKWidgets)
+        message(STATUS "QWindowKit is built by parent project (QWKWidgets target exists), skip find_package")
+    else()
     # 明确记录尝试查找的路径
     set(_qwk_search_paths)
 
@@ -190,6 +203,7 @@ if(_SARIBBON_USE_FRAMELESS_LIB)
     else()
         set(_SARIBBON_USE_FRAMELESS_LIB OFF)
         message(WARNING "QWindowKit not found - disabling frameless support. Searched paths:\n  ${_qwk_search_paths}")
+    endif()
     endif()
 endif()
 

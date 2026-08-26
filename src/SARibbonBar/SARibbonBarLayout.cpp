@@ -1399,6 +1399,13 @@ void SARibbonBarLayout::layoutStackedContainerWidget()
 
     int x = border.left();
     int y = ribbonTabBarGeometry.bottom() + 1;
+    if (isCompactStyle() && ribbon->isCompactTabBarCentered()) {
+        // ModernBlue 等主题：stacked widget 从标题栏下方开始，而非tabbar下方
+        y = border.top() + d_ptr->getActualTitleBarHeight();
+        if (ribbon->stackedTopGap() > 0) {
+            y += ribbon->stackedTopGap();
+        }
+    }
     int w = ribbon->width() - border.left() - border.right();
     int h = d_ptr->getActualCategoryHeight();
 
@@ -1829,7 +1836,12 @@ void SARibbonBarLayout::resizeInCompactStyle()
         int mintabBarWidth = calcMinTabBarWidth();
         barMinWidth += mintabBarWidth;
         if (tabBar) {
-            y = border.top() + (titleBarControlHeight - tabH);
+            if (ribbon->isCompactTabBarCentered()) {
+                // ModernBlue 等主题：tabbar 垂直居中
+                y = border.top() + (titleBarControlHeight - tabH) / 2;
+            } else {
+                y = border.top() + (titleBarControlHeight - tabH);
+            }
             if (ribbon->ribbonAlignment() == SARibbonAlignment::AlignLeft) {
                 // AlignLeft in RTL means tabs start from the right edge (visual right)
                 if (mintabBarWidth < tabBarWidth) {
@@ -1943,7 +1955,12 @@ void SARibbonBarLayout::resizeInCompactStyle()
         // 累加到最小宽度中
         barMinWidth += mintabBarWidth;
         if (tabBar) {
-            y = border.top() + (titleBarControlHeight - tabH);
+            if (ribbon->isCompactTabBarCentered()) {
+                // ModernBlue 等主题：tabbar 垂直居中
+                y = border.top() + (titleBarControlHeight - tabH) / 2;
+            } else {
+                y = border.top() + (titleBarControlHeight - tabH);
+            }
             if (ribbon->ribbonAlignment() == SARibbonAlignment::AlignLeft) {
                 // 左对齐的tabbar，直接设置位置
                 if (mintabBarWidth < tabBarWidth) {

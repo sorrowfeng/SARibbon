@@ -264,7 +264,12 @@ void MainWindow::onRibbonThemeComboBoxCurrentIndexChanged(int index)
 {
 	SARibbonTheme t = static_cast< SARibbonTheme >(mComboboxRibbonTheme->itemData(index).toInt());
 	setRibbonTheme(t);
-    qDebug() << "setRibbonTheme:" << index << this->styleSheet();
+	if (SARibbonTheme::RibbonThemeModernBlue == t) {
+		ribbonBar()->setPanelAlignment(SARibbonAlignment::AlignCenter);
+		if (QCheckBox* checkBox = findChild< QCheckBox* >("checkBoxAlignmentCenter")) {
+			checkBox->setChecked(true);
+		}
+	}
 }
 
 /**
@@ -290,9 +295,9 @@ void MainWindow::onActionVisibleAllTriggered(bool on)
 void MainWindow::onCheckBoxAlignmentCenterClicked(bool checked)
 {
 	if (checked) {
-		ribbonBar()->setRibbonAlignment(SARibbonAlignment::AlignCenter);
+		ribbonBar()->setPanelAlignment(SARibbonAlignment::AlignCenter);
 	} else {
-		ribbonBar()->setRibbonAlignment(SARibbonAlignment::AlignLeft);
+		ribbonBar()->setPanelAlignment(SARibbonAlignment::AlignLeft);
 	}
 }
 
@@ -408,6 +413,9 @@ void MainWindow::createCategoryMain(SARibbonCategory* page)
 	mComboboxRibbonTheme->addItem("Theme Dark2", static_cast< int >(SARibbonTheme::RibbonThemeDark2));
 	mComboboxRibbonTheme->addItem("Theme Office2021 Green", static_cast< int >(SARibbonTheme::RibbonThemeOffice2021Green));
 	mComboboxRibbonTheme->addItem("Theme Office2021 Dark", static_cast< int >(SARibbonTheme::RibbonThemeOffice2021Dark));
+	mComboboxRibbonTheme->addItem("Theme Fluent UI Light", static_cast< int >(SARibbonTheme::RibbonThemeFluentUILight));
+	mComboboxRibbonTheme->addItem("Theme Fluent UI Dark", static_cast< int >(SARibbonTheme::RibbonThemeFluentUIDark));
+	mComboboxRibbonTheme->addItem("Theme Modern Blue", static_cast< int >(SARibbonTheme::RibbonThemeModernBlue));
 	mComboboxRibbonTheme->setCurrentIndex(mComboboxRibbonTheme->findData(static_cast< int >(ribbonTheme())));
 	connect(mComboboxRibbonTheme,
             QOverload< int >::of(&QComboBox::currentIndexChanged),
@@ -417,7 +425,7 @@ void MainWindow::createCategoryMain(SARibbonCategory* page)
 
     QCheckBox* checkBox = new QCheckBox(this);
 
-	checkBox->setText(tr("Alignment Center"));
+	checkBox->setText(tr("Panel Center"));
 	checkBox->setObjectName("checkBoxAlignmentCenter");
 	checkBox->setWindowTitle(checkBox->text());
     connect(checkBox, &QCheckBox::clicked, this, &MainWindow::onCheckBoxAlignmentCenterClicked);

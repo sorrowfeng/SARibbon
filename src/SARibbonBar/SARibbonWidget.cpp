@@ -1,9 +1,12 @@
 #include "SARibbonWidget.h"
 #include "SARibbonBar.h"
+#include "SARibbonButtonGroupWidget.h"
+#include "SARibbonSystemButtonBar.h"
 #include "SARibbonTabBar.h"
 #include <QApplication>
 #include <QDebug>
 #include <QFile>
+#include <QLayout>
 #include <QScreen>
 #include "SARibbonUtil.h"
 #include "SARibbonThemeManager.h"
@@ -144,6 +147,12 @@ void SARibbonWidget::setRibbonTheme(SARibbonTheme theme)
 	if (d_ptr->mCurrentRibbonTheme != theme) {
 		d_ptr->mCurrentRibbonTheme = theme;
 		SA::applyRibbonTheme(this, ribbonBar(), theme);
+		if (SARibbonBar* bar = ribbonBar()) {
+			bar->setContentsMargins(QMargins(0, 0, 0, 0));
+			// 应用/恢复主题配套的布局参数
+			sa_apply_ribbon_theme_layout(bar, theme);
+			sa_configure_ribbon_theme_options(bar, theme);
+		}
 		Q_EMIT ribbonThemeChanged(theme);
 	}
 }
@@ -283,5 +292,102 @@ void SARibbonWidget::onPrimaryScreenChanged(QScreen* screen)
 	if (SARibbonBar* bar = ribbonBar()) {
 		qDebug() << "Primary Screen Changed";
 		bar->updateRibbonGeometry();
+	}
+}
+
+/**
+ * \if ENGLISH
+ * @brief Apply or restore the overall layout parameters of SARibbonBar according to the theme
+ *
+ * Only affects the ModernBlue theme: backs up the current layout on first entry and restores it on exit
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 根据主题应用/恢复SARibbonBar的整体布局参数
+ *
+ * 只影响ModernBlue主题：首次切入时备份当前布局，切出时恢复
+ * \endif
+ */
+void sa_apply_ribbon_theme_layout(SARibbonBar* bar, SARibbonTheme theme)
+{
+	if (!bar) {
+		return;
+	}
+	// 是否已应用ModernBlue布局的标记，只有应用过ModernBlue布局，切出时才需要恢复
+	const char* appliedProp = "_sa_theme_layout_modernblue";
+	if (theme == SARibbonTheme::RibbonThemeModernBlue) {
+		if (!bar->property(appliedProp).toBool()) {
+			// 首次切入ModernBlue前备份当前布局，切出时恢复
+			bar->setProperty("_sa_layout_bak_titlevisible", bar->isTitleVisible());
+			bar->setProperty("_sa_layout_bak_titlebarheight", bar->titleBarHeight());
+			bar->setProperty("_sa_layout_bak_tabbarheight", bar->tabBarHeight());
+			bar->setProperty("_sa_layout_bak_ribbonalignment", static_cast< int >(bar->ribbonAlignment()));
+			bar->setProperty("_sa_layout_bak_panelalignment", static_cast< int >(bar->panelAlignment()));
+			bar->setProperty("_sa_layout_bak_minbutton", bar->isMinimumModeButtonVisible());
+			bar->setProperty(appliedProp, true);
+		}
+		// ModernBlue主题只调整标题栏/tab栏：隐藏标题，tab及panel居中
+		// 不改变ribbon风格及panel内部元素的尺寸（图标大小、按钮宽高、panel间距等保持原样）
+		bar->setTitleVisible(false);
+		bar->setTitleBarHeight(48);
+		bar->setTabBarHeight(36);
+		bar->setRibbonAlignment(SARibbonAlignment::AlignCenter);
+		bar->setPanelAlignment(SARibbonAlignment::AlignCenter);
+		bar->showMinimumModeButton(true);
+		if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
+			if (QLayout* lay = rightGroup->layout()) {
+				lay->setContentsMargins(0, 0, 0, 0);
+				lay->setSpacing(2);
+			}
+		}
+	} else if (bar->property(appliedProp).toBool()) {
+		// 从ModernBlue切出，恢复切入前备份的布局
+		bar->setTitleVisible(bar->property("_sa_layout_bak_titlevisible").toBool());
+		bar->setTitleBarHeight(bar->property("_sa_layout_bak_titlebarheight").toInt());
+		bar->setTabBarHeight(bar->property("_sa_layout_bak_tabbarheight").toInt());
+		bar->setRibbonAlignment(static_cast< SARibbonAlignment >(bar->property("_sa_layout_bak_ribbonalignment").toInt()));
+		bar->setPanelAlignment(static_cast< SARibbonAlignment >(bar->property("_sa_layout_bak_panelalignment").toInt()));
+		bar->showMinimumModeButton(bar->property("_sa_layout_bak_minbutton").toBool());
+		bar->setProperty(appliedProp, false);
+	}
+	// 其他主题之间的切换不做任何布局改动
+}
+
+/**
+ * \if ENGLISH
+ * @brief Configure theme-related runtime layout parameters (tabbar centering, window button size, etc.)
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 配置主题相关的运行时布局参数（tabbar 居中、窗口按钮尺寸等）
+ * \endif
+ */
+void sa_configure_ribbon_theme_options(SARibbonBar* bar, SARibbonTheme theme, SARibbonSystemButtonBar* windowButtonGroup)
+{
+	if (!bar) {
+		return;
+	}
+	const bool isModernBlue = (theme == SARibbonTheme::RibbonThemeModernBlue);
+	bar->setCompactTabBarCentered(isModernBlue);
+	bar->setStackedTopGap(isModernBlue ? 2 : 0);
+	// 深色标题栏主题刷新隐藏ribbon按钮图标(白色箭头)
+	bar->updateMinimumModeButtonIcon(theme);
+	if (SARibbonTabBar* tab = bar->ribbonTabBar()) {
+		tab->setTabItemHeight(isModernBlue ? 36 : 0);
+	}
+	if (isModernBlue) {
+		if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
+			rightGroup->setIconSize(QSize(16, 16));
+		}
+	}
+	if (!windowButtonGroup) {
+		return;
+	}
+	if (isModernBlue) {
+		windowButtonGroup->setButtonWidthStretch(1, 1, 1);
+		windowButtonGroup->setWindowButtonWidth(28);
+		windowButtonGroup->setWindowButtonLayout(12, 4, 30);
+	} else {
+		windowButtonGroup->resetWindowButtonLayout();
 	}
 }

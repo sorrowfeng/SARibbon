@@ -4,6 +4,7 @@
 #include "SARibbonContextCategory.h"
 #include "SARibbonGlobal.h"
 #include <QMenuBar>
+#include <QIcon>
 #include <QScopedPointer>
 #include <QVariant>
 
@@ -341,6 +342,12 @@ public:
     /// Check if minimum mode button is shown
     bool isMinimumModeButtonVisible() const;
 
+    /// Refresh minimum mode button icon by theme (dark titlebar themes use white-inverted icon)
+    void updateMinimumModeButtonIcon(SARibbonTheme theme);
+
+    /// Get minimum mode button icon by theme and state
+    QIcon minimumModeButtonIcon(SARibbonTheme theme, bool isMinimumMode) const;
+
     /// Get minimum mode action
     QAction* minimumModeAction() const;
 
@@ -502,6 +509,15 @@ public:
     /// Get panel small icon size
     QSize panelSmallIconSize() const;
 
+    /// Set whether the tabbar is vertically centered in compact style (used by themes such as ModernBlue)
+    void setCompactTabBarCentered(bool centered);
+    /// Check whether the tabbar is vertically centered in compact style
+    bool isCompactTabBarCentered() const;
+    /// Set the top gap of the stacked widget in compact centered style (used by themes such as ModernBlue)
+    void setStackedTopGap(int gap);
+    /// Get the top gap of the stacked widget
+    int stackedTopGap() const;
+
     /// Get ribbon stacked widget
     SARibbonStackedWidget* ribbonStackedWidget();
 
@@ -522,6 +538,11 @@ public:
     void setRibbonAlignment(SARibbonAlignment al);
     /// Get ribbon alignment
     SARibbonAlignment ribbonAlignment() const;
+
+    /// Set the horizontal alignment of panels in categories
+    void setPanelAlignment(SARibbonAlignment al);
+    /// Get the horizontal alignment of panels
+    SARibbonAlignment panelAlignment() const;
 
     /// Iterate through all categories
     bool iterateCategory(FpCategoryIterate fp) const;

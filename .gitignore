@@ -187,3 +187,8 @@ dist/
 build/
 __pycache__
 aqtinstall.log
+
+# other
+install/
+install-linux/
+build-linux/

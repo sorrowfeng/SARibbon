@@ -74,6 +74,7 @@ public:
     QPointer< SARibbonTitleIconWidget > mTitleIconWidget;     ///< 标题栏图标
 
     QAction* mMinimumCategoryButtonAction { nullptr };  ///< 隐藏面板按钮action
+    SARibbonTheme mCurrentRibbonTheme { SARibbonTheme::RibbonThemeOffice2013 };  ///< 当前主题(用于最小化按钮图标取色)
     QList< _SAContextCategoryManagerData > mCurrentShowingContextCategory;
     QList< SARibbonContextCategory* > mContextCategoryList;  ///< 存放所有的上下文标签
     QList< _SARibbonHiddenCategoryData > mHidedCategory;
@@ -89,6 +90,7 @@ public:
     bool mIsTitleVisible { true };                                        ///< 标题是否显示
     QBrush mTitleBackgroundBrush { Qt::NoBrush };                         ///< 标题的背景颜色
     SARibbonAlignment mRibbonAlignment { SARibbonAlignment::AlignLeft };  ///< 对齐方式
+    SARibbonAlignment mPanelAlignment { SARibbonAlignment::AlignLeft };   ///< panel的水平对齐方式
     SARibbonPanel::PanelLayoutMode mDefaultPanelLayoutMode { SARibbonPanel::ThreeRowMode };  ///< 默认的PanelLayoutMode
     bool mEnableShowPanelTitle { true };                         ///< 是否允许panel的标题栏显示
     bool mEnableIconRightText { false };                         ///< 鏄惁鍚敤鍥炬爣鍙充晶鏂囧瓧妯″紡
@@ -100,6 +102,8 @@ public:
     bool mEnableTabDoubleClickToMinimumMode { true };            ///< 是否允许tab双击激活ribbon的最小化模式
     bool mEnableWordWrap { true };                               ///< 是否允许文字换行
     qreal buttonMaximumAspectRatio { 1.4 };                      ///< 按钮的最大宽高比
+    bool mCompactTabBarCentered { false };                       ///< ModernBlue: tabbar 垂直居中
+    int mStackedTopGap { 0 };                                    ///< ModernBlue: stacked widget 顶部间距
 public:
     PrivateData(SARibbonBar* par) : q_ptr(par)
     {
@@ -814,6 +818,7 @@ void SARibbonBar::insertCategoryPage(SARibbonCategory* category, int index)
     category->setPanelLargeIconSize(panelLargeIconSize());
     category->setPanelSmallIconSize(panelSmallIconSize());
     category->setEnableWordWrap(isEnableWordWrap());
+    category->setCategoryAlignment(d_ptr->mPanelAlignment);
 
     int i = d_ptr->mRibbonTabBar->insertTab(index, category->categoryName());
 
@@ -1512,23 +1517,106 @@ bool SARibbonBar::isMinimumMode() const
 void SARibbonBar::showMinimumModeButton(bool isShow)
 {
     SA_D(d);
-    if (isShow && !(d->mMinimumCategoryButtonAction)) {
+    if (isShow) {
+        if (nullptr != d->mMinimumCategoryButtonAction) {
+            // 已经显示，避免重复添加按钮
+            return;
+        }
         activeRightButtonGroup();
 
         d->mMinimumCategoryButtonAction = new QAction(this);
-        d->mMinimumCategoryButtonAction->setIcon(style()->standardIcon(
-            isMinimumMode() ? QStyle::SP_TitleBarUnshadeButton : QStyle::SP_TitleBarShadeButton, nullptr));
+        d->mMinimumCategoryButtonAction->setIcon(minimumModeButtonIcon(d->mCurrentRibbonTheme, isMinimumMode()));
         connect(d->mMinimumCategoryButtonAction, &QAction::triggered, this, [ this, d ]() {
             this->setMinimumMode(!isMinimumMode());
-            d->mMinimumCategoryButtonAction->setIcon(style()->standardIcon(
-                isMinimumMode() ? QStyle::SP_TitleBarUnshadeButton : QStyle::SP_TitleBarShadeButton, nullptr));
+            d->mMinimumCategoryButtonAction->setIcon(minimumModeButtonIcon(d->mCurrentRibbonTheme, this->isMinimumMode()));
         });
         if (d->mRightButtonGroup) {
             d->mRightButtonGroup->addAction(d->mMinimumCategoryButtonAction);
         }
+    } else {
+        if (nullptr != d->mMinimumCategoryButtonAction) {
+            d->mMinimumCategoryButtonAction->deleteLater();
+            d->mMinimumCategoryButtonAction = nullptr;
+        }
     }
+    QResizeEvent resizeEvent(size(), size());
+    QApplication::sendEvent(this, &resizeEvent);
+}
 
-    d->mMinimumCategoryButtonAction->setVisible(isShow);
+/**
+ * \if ENGLISH
+ * @brief Refresh the minimum mode button icon according to the theme
+ *
+ * For dark titlebar themes (FluentUIDark/Dark/Dark2/ModernBlue), the standard shade icon
+ * is black and invisible on dark backgrounds, so a white-inverted icon is used instead
+ * @param theme The ribbon theme
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 按主题刷新隐藏ribbon按钮图标
+ *
+ * 深色标题栏主题(FluentUIDark/Dark/Dark2/ModernBlue)下标准 shade 图标为黑色,
+ * 在深色背景上不可见,改用反白图标
+ * @param theme ribbon主题
+ * \endif
+ */
+void SARibbonBar::updateMinimumModeButtonIcon(SARibbonTheme theme)
+{
+    SA_D(d);
+    d->mCurrentRibbonTheme = theme;
+    if (nullptr == d->mMinimumCategoryButtonAction) {
+        return;
+    }
+    d->mMinimumCategoryButtonAction->setIcon(minimumModeButtonIcon(theme, isMinimumMode()));
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the minimum mode button icon for the given theme and state
+ * @param theme The ribbon theme
+ * @param isMinimumMode Whether ribbon is in minimum mode
+ * @return The icon, white-inverted for dark titlebar themes
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取隐藏ribbon按钮的图标(按主题/状态取色)
+ * @param theme ribbon主题
+ * @param isMinimumMode 是否为最小模式
+ * @return 图标，深色标题栏主题下为反白图标
+ * \endif
+ */
+QIcon SARibbonBar::minimumModeButtonIcon(SARibbonTheme theme, bool isMinimumMode) const
+{
+    const QStyle::StandardPixmap sp = isMinimumMode ? QStyle::SP_TitleBarUnshadeButton : QStyle::SP_TitleBarShadeButton;
+    QIcon base                      = style()->standardIcon(sp, nullptr);
+    switch (theme) {
+    case SARibbonTheme::RibbonThemeFluentUIDark:
+    case SARibbonTheme::RibbonThemeDark:
+    case SARibbonTheme::RibbonThemeDark2:
+    case SARibbonTheme::RibbonThemeModernBlue: {
+        // 与浅色主题同一标准图标,仅反白(SourceIn 保留 alpha 形状):
+        // 几何与尺寸和浅色主题完全一致,避免位图按 iconSize 放大失真
+        QIcon whiteIcon;
+        for (int size : { 16, 20, 24, 32 }) {
+            QImage image = base.pixmap(size, size).toImage().convertToFormat(QImage::Format_ARGB32_Premultiplied);
+            if (image.isNull()) {
+                continue;
+            }
+            QPainter painter(&image);
+            painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+            painter.fillRect(image.rect(), Qt::white);
+            painter.end();
+            whiteIcon.addPixmap(QPixmap::fromImage(image));
+        }
+        if (!whiteIcon.isNull()) {
+            return whiteIcon;
+        }
+        return base;
+    }
+    default:
+        break;
+    }
+    return base;
 }
 
 /**
@@ -2052,7 +2140,7 @@ void SARibbonBar::synchronousCategoryData(bool autoUpdate)
     iterateCategory([ this ](SARibbonCategory* c) -> bool {
         c->setEnableShowPanelTitle(this->isEnableShowPanelTitle());
         c->setPanelTitleHeight(this->panelTitleHeight());
-        c->setCategoryAlignment(this->ribbonAlignment());
+        c->setCategoryAlignment(this->panelAlignment());
         c->setPanelLayoutMode(this->panelLayoutMode());
         return true;
     });
@@ -3042,6 +3130,70 @@ QSize SARibbonBar::panelSmallIconSize() const
 
 /**
  * \if ENGLISH
+ * @brief Set whether the tabbar is vertically centered in compact style (used by themes such as ModernBlue)
+ * @param centered Whether to center the tabbar vertically
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 设置紧凑模式下tabbar是否垂直居中（ModernBlue 等主题使用）
+ * @param centered 是否垂直居中
+ * \endif
+ */
+void SARibbonBar::setCompactTabBarCentered(bool centered)
+{
+    d_ptr->mCompactTabBarCentered = centered;
+}
+
+/**
+ * \if ENGLISH
+ * @brief Check whether the tabbar is vertically centered in compact style
+ * @return True if the tabbar is vertically centered
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 紧凑模式下tabbar是否垂直居中
+ * @return 垂直居中返回true
+ * \endif
+ */
+bool SARibbonBar::isCompactTabBarCentered() const
+{
+    return d_ptr->mCompactTabBarCentered;
+}
+
+/**
+ * \if ENGLISH
+ * @brief Set the top gap of the stacked widget in compact centered style (used by themes such as ModernBlue)
+ * @param gap Top gap in pixels
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 设置紧凑居中模式下 stacked widget 的顶部间距（ModernBlue 等主题使用）
+ * @param gap 顶部间距（像素）
+ * \endif
+ */
+void SARibbonBar::setStackedTopGap(int gap)
+{
+    d_ptr->mStackedTopGap = qMax(0, gap);
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the top gap of the stacked widget
+ * @return Top gap in pixels
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取 stacked widget 的顶部间距
+ * @return 顶部间距（像素）
+ * \endif
+ */
+int SARibbonBar::stackedTopGap() const
+{
+    return d_ptr->mStackedTopGap;
+}
+
+/**
+ * \if ENGLISH
  * @brief Get ribbon bar internal StackedWidget
  * All categories are placed in the StackedWidget
  * @return Ribbon stacked widget pointer
@@ -3242,7 +3394,7 @@ void SARibbonBar::setRibbonAlignment(SARibbonAlignment al)
 {
     if (d_ptr->mRibbonAlignment != al) {
         d_ptr->mRibbonAlignment = al;
-        synchronousCategoryData();
+        setPanelAlignment(al);
         updateRibbonGeometry();
     }
 }
@@ -3261,6 +3413,39 @@ void SARibbonBar::setRibbonAlignment(SARibbonAlignment al)
 SARibbonAlignment SARibbonBar::ribbonAlignment() const
 {
     return d_ptr->mRibbonAlignment;
+}
+
+/**
+ * \if ENGLISH
+ * @brief Set the horizontal alignment of panels in categories
+ * @param al Panel alignment
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 设置panel的水平对齐方式
+ * @param al 对齐方式
+ * \endif
+ */
+void SARibbonBar::setPanelAlignment(SARibbonAlignment al)
+{
+    d_ptr->mPanelAlignment = al;
+    synchronousCategoryData();
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the horizontal alignment of panels
+ * @return Current panel alignment
+ * \endif
+ *
+ * \if CHINESE
+ * @brief panel的水平对齐方式
+ * @return 当前panel的对齐方式
+ * \endif
+ */
+SARibbonAlignment SARibbonBar::panelAlignment() const
+{
+    return d_ptr->mPanelAlignment;
 }
 
 /**

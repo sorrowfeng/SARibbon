@@ -1052,6 +1052,7 @@ void SARibbonCategoryLayout::setCategoryAlignment(SARibbonAlignment al)
 {
     if (d_ptr->mCategoryAlignment != al) {
         d_ptr->mCategoryAlignment = al;
+        invalidate();
     }
 }
 

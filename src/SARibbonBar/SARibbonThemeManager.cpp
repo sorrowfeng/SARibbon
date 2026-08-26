@@ -30,7 +30,10 @@ static const std::map< SARibbonTheme, QMargins > s_themeMargins = {
     { SARibbonTheme::RibbonThemeDark2, QMargins(5, 0, 0, 0) },
     { SARibbonTheme::RibbonThemeOffice2021Blue, QMargins(5, 0, 5, 0) },
     { SARibbonTheme::RibbonThemeOffice2021Green, QMargins(5, 0, 5, 0) },
-    { SARibbonTheme::RibbonThemeOffice2021Dark, QMargins(5, 0, 5, 0) }
+    { SARibbonTheme::RibbonThemeOffice2021Dark, QMargins(5, 0, 5, 0) },
+    { SARibbonTheme::RibbonThemeFluentUILight, QMargins(5, 0, 0, 0) },
+    { SARibbonTheme::RibbonThemeFluentUIDark, QMargins(5, 0, 0, 0) },
+    { SARibbonTheme::RibbonThemeModernBlue, QMargins(8, 0, 8, 0) }
 };
 
 /// Highlight function: produce a darker variant of the context category color
@@ -54,7 +57,10 @@ static const std::map< SARibbonTheme, SARibbonBar::FpContextCategoryHighlight > 
     { SARibbonTheme::RibbonThemeOffice2021Blue, [](const QColor&) -> QColor { return QColor(39, 96, 167); } },
     { SARibbonTheme::RibbonThemeDark2, s_csVibrantHighlight },
     { SARibbonTheme::RibbonThemeOffice2021Green, s_csVibrantHighlight },
-    { SARibbonTheme::RibbonThemeOffice2021Dark, s_csVibrantHighlight }
+    { SARibbonTheme::RibbonThemeOffice2021Dark, s_csVibrantHighlight },
+    { SARibbonTheme::RibbonThemeFluentUILight, [](const QColor&) -> QColor { return QColor(0, 103, 192); } },
+    { SARibbonTheme::RibbonThemeFluentUIDark, [](const QColor&) -> QColor { return QColor(0, 120, 212); } },
+    { SARibbonTheme::RibbonThemeModernBlue, [](const QColor& c) -> QColor { return c.darker(130); } }
 };
 
 /// Context category color list per theme
@@ -68,7 +74,10 @@ static const std::map< SARibbonTheme, QList< QColor > > s_themeContextColorLists
     { SARibbonTheme::RibbonThemeOffice2021Blue, { QColor(209, 207, 209) } },
     { SARibbonTheme::RibbonThemeDark2, { QColor(42, 141, 181) } },
     { SARibbonTheme::RibbonThemeOffice2021Green, { QColor(180, 200, 180) } },
-    { SARibbonTheme::RibbonThemeOffice2021Dark, { QColor(80, 80, 80) } }
+    { SARibbonTheme::RibbonThemeOffice2021Dark, { QColor(80, 80, 80) } },
+    { SARibbonTheme::RibbonThemeFluentUILight, { QColor(243, 243, 243) } },
+    { SARibbonTheme::RibbonThemeFluentUIDark, {} },
+    { SARibbonTheme::RibbonThemeModernBlue, { QColor(30, 148, 212), QColor(15, 48, 128) } }
 };
 
 /// Tab bar baseline color per theme (only Office2013 has a visible baseline)
@@ -82,7 +91,10 @@ static const std::map< SARibbonTheme, QColor > s_themeBaselineColors = {
     { SARibbonTheme::RibbonThemeDark, QColor() },
     { SARibbonTheme::RibbonThemeDark2, QColor() },
     { SARibbonTheme::RibbonThemeOffice2021Green, QColor() },
-    { SARibbonTheme::RibbonThemeOffice2021Dark, QColor() }
+    { SARibbonTheme::RibbonThemeOffice2021Dark, QColor() },
+    { SARibbonTheme::RibbonThemeFluentUILight, QColor() },
+    { SARibbonTheme::RibbonThemeFluentUIDark, QColor() },
+    { SARibbonTheme::RibbonThemeModernBlue, QColor() }
 };
 
 // ===================================================
@@ -159,6 +171,12 @@ static QString themeToTemplatePath(SARibbonTheme theme)
         return ":/SARibbonTheme/resource/templates/win7.qss";
     case SARibbonTheme::RibbonThemeOffice2013:
         return ":/SARibbonTheme/resource/templates/office2013.qss";
+    case SARibbonTheme::RibbonThemeFluentUILight:
+        return ":/SARibbonTheme/resource/theme-fluent-ui-light.qss";
+    case SARibbonTheme::RibbonThemeFluentUIDark:
+        return ":/SARibbonTheme/resource/theme-fluent-ui-dark.qss";
+    case SARibbonTheme::RibbonThemeModernBlue:
+        return ":/SARibbonTheme/resource/theme-modern-blue.qss";
     default:
         return QString();
     }
@@ -253,6 +271,19 @@ void applyRibbonTheme(QWidget* w, SARibbonBar* bar, SARibbonTheme theme,
             QFile baseOnly(":/SARibbonTheme/resource/theme-base.qss");
             if (baseOnly.open(QIODevice::ReadOnly | QIODevice::Text)) {
                 w->setStyleSheet(QString::fromUtf8(baseOnly.readAll()));
+            }
+        }
+    } else if (w && !templatePath.isEmpty()) {
+        // Standalone QSS file (FluentUI/ModernBlue themes) — load directly without base template
+        QFile themeFile(templatePath);
+        if (themeFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            w->setStyleSheet(QString::fromUtf8(themeFile.readAll()));
+        } else {
+            qWarning() << "applyRibbonTheme: standalone theme not found:" << templatePath
+                       << "- falling back to base QSS";
+            QFile baseQss(":/SARibbonTheme/resource/theme-base.qss");
+            if (baseQss.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                w->setStyleSheet(QString::fromUtf8(baseQss.readAll()));
             }
         }
     } else if (w) {

@@ -68,6 +68,12 @@ public:
     void setWindowButtonWidth(int w);
     /// Get standard system button width
     int windowButtonWidth() const;
+    /// Set window button layout params (rightMargin/spacing/height), negative values restore default
+    void setWindowButtonLayout(int rightMargin, int spacing, int height);
+    /// Reset window button layout params to default
+    void resetWindowButtonLayout();
+    /// Trigger a relayout of the window buttons
+    void updateButtonLayout();
     /// Set Qt::WindowStates
     void setWindowStates(Qt::WindowStates s);
     /// Get button states only

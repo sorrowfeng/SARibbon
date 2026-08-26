@@ -27,6 +27,9 @@ public:
     int mMinStretch { 3 };
     int mWindowButtonWidth { 35 };
     int mTitleBarHeight { 28 };
+    int mButtonRightMargin { -1 };
+    int mButtonSpacing { -1 };
+    int mButtonHeight { -1 };
     Qt::WindowFlags mFlags { Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint };
     SARibbonButtonGroupWidget* mButtonGroup;
 
@@ -134,42 +137,53 @@ public:
      */
     void resizeElement(QSize size)
     {
+        const int buttonRightMargin = (mButtonRightMargin >= 0) ? mButtonRightMargin : 0;
+        const int buttonSpacing     = (mButtonSpacing >= 0) ? mButtonSpacing : 0;
+        int buttonHeight            = (mButtonHeight > 0) ? mButtonHeight : size.height();
+        if (buttonHeight > size.height()) {
+            buttonHeight = size.height();
+        }
+        const int buttonY = (size.height() - buttonHeight) / 2;
         if (SA::saIsRTL()) {
-            int x = 0;
+            int x = buttonRightMargin;
             if (buttonMinimize) {
                 int w = minButtonWidthHint();
-                buttonMinimize->setGeometry(x, 0, w, size.height());
+                buttonMinimize->setGeometry(x, buttonY, w, buttonHeight);
                 x += w;
+                x += buttonSpacing;
             }
             if (buttonMaximize) {
                 int w = maxButtonWidthHint();
-                buttonMaximize->setGeometry(x, 0, w, size.height());
+                buttonMaximize->setGeometry(x, buttonY, w, buttonHeight);
                 x += w;
+                x += buttonSpacing;
             }
             if (buttonClose) {
                 int w = closeButtonWidthHint();
-                buttonClose->setGeometry(x, 0, w, size.height());
+                buttonClose->setGeometry(x, buttonY, w, buttonHeight);
                 x += w;
             }
             if (mButtonGroup) {
                 mButtonGroup->setGeometry(x, 0, size.width() - x, size.height());
             }
         } else {
-            int x = size.width();
+            int x = size.width() - buttonRightMargin;
             if (buttonClose) {
                 int w = closeButtonWidthHint();
                 x -= w;
-                buttonClose->setGeometry(x, 0, w, size.height());
+                buttonClose->setGeometry(x, buttonY, w, buttonHeight);
             }
             if (buttonMaximize) {
                 int w = maxButtonWidthHint();
+                x -= buttonSpacing;
                 x -= w;
-                buttonMaximize->setGeometry(x, 0, w, size.height());
+                buttonMaximize->setGeometry(x, buttonY, w, buttonHeight);
             }
             if (buttonMinimize) {
                 int w = minButtonWidthHint();
+                x -= buttonSpacing;
                 x -= w;
-                buttonMinimize->setGeometry(x, 0, w, size.height());
+                buttonMinimize->setGeometry(x, buttonY, w, buttonHeight);
             }
             if (mButtonGroup) {
                 mButtonGroup->setGeometry(0, 0, x, size.height());
@@ -214,6 +228,18 @@ public:
         }
         if (buttonMinimize) {
             res.setWidth(res.width() + minButtonWidthHint());
+        }
+        int visibleButtonCount = 0;
+        visibleButtonCount += buttonClose ? 1 : 0;
+        visibleButtonCount += buttonMaximize ? 1 : 0;
+        visibleButtonCount += buttonMinimize ? 1 : 0;
+        const int buttonRightMargin = (mButtonRightMargin >= 0) ? mButtonRightMargin : 0;
+        if (buttonRightMargin > 0) {
+            res.rwidth() += buttonRightMargin;
+        }
+        const int buttonSpacing = (mButtonSpacing >= 0) ? mButtonSpacing : 0;
+        if (buttonSpacing > 0 && visibleButtonCount > 1) {
+            res.rwidth() += buttonSpacing * (visibleButtonCount - 1);
         }
         return res;
     }
@@ -469,6 +495,60 @@ int SARibbonSystemButtonBar::windowButtonWidth() const
 
 /**
  * \if ENGLISH
+ * @brief Sets the window button layout parameters (used by themes such as ModernBlue)
+ * @param rightMargin Right margin of the button area, negative value restores default
+ * @param spacing Spacing between buttons, negative value restores default
+ * @param height Button height, non-positive value restores default (fills the title bar height)
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 设置窗口按钮的布局参数（ModernBlue 等主题使用）
+ * @param rightMargin 按钮区右边距，负值表示恢复默认
+ * @param spacing 按钮间距，负值表示恢复默认
+ * @param height 按钮高度，非正值表示恢复默认（填满标题栏高度）
+ * \endif
+ */
+void SARibbonSystemButtonBar::setWindowButtonLayout(int rightMargin, int spacing, int height)
+{
+    d_ptr->mButtonRightMargin = rightMargin;
+    d_ptr->mButtonSpacing     = spacing;
+    d_ptr->mButtonHeight      = height;
+    d_ptr->updateSize();
+}
+
+/**
+ * \if ENGLISH
+ * @brief Resets the window button layout parameters to default
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 恢复窗口按钮布局参数为默认值
+ * \endif
+ */
+void SARibbonSystemButtonBar::resetWindowButtonLayout()
+{
+    d_ptr->mButtonRightMargin = -1;
+    d_ptr->mButtonSpacing     = -1;
+    d_ptr->mButtonHeight      = -1;
+    d_ptr->updateSize();
+}
+
+/**
+ * \if ENGLISH
+ * @brief Triggers a relayout of the window buttons
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 触发窗口按钮重新布局
+ * \endif
+ */
+void SARibbonSystemButtonBar::updateButtonLayout()
+{
+    d_ptr->updateSize();
+}
+
+/**
+ * \if ENGLISH
  * @brief Sets the window state (maximize/minimize button state)
  * @param s Window states
  * \endif
@@ -483,7 +563,7 @@ void SARibbonSystemButtonBar::setWindowStates(Qt::WindowStates s)
     if (d_ptr->buttonMaximize) {
         bool on = s.testFlag(Qt::WindowMaximized);
         d_ptr->buttonMaximize->setChecked(on);
-        d_ptr->buttonMaximize->setToolTip(on ? tr("Restore") : tr("Maximize"));
+        // d_ptr->buttonMaximize->setToolTip(on ? tr("Restore") : tr("Maximize"));
     }
 }
 

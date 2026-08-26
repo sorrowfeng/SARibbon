@@ -944,6 +944,12 @@ void MainWindow::onRibbonThemeComboBoxCurrentIndexChanged(int themeIndex)
 {
     SARibbonTheme selectedTheme = static_cast< SARibbonTheme >(mComboboxRibbonTheme->itemData(themeIndex).toInt());
     setRibbonTheme(selectedTheme);
+    if (SARibbonTheme::RibbonThemeModernBlue == selectedTheme) {
+        ribbonBar()->setPanelAlignment(SARibbonAlignment::AlignCenter);
+        if (QCheckBox* checkBox = findChild< QCheckBox* >("checkBoxAlignmentCenter")) {
+            checkBox->setChecked(true);
+        }
+    }
 }
 
 /**
@@ -1014,9 +1020,9 @@ void MainWindow::onActionVisibleAllTriggered(bool visibleAll)
 void MainWindow::onCheckBoxAlignmentCenterClicked(bool centerAligned)
 {
     if (centerAligned) {
-        ribbonBar()->setRibbonAlignment(SARibbonAlignment::AlignCenter);
+        ribbonBar()->setPanelAlignment(SARibbonAlignment::AlignCenter);
     } else {
-        ribbonBar()->setRibbonAlignment(SARibbonAlignment::AlignLeft);
+        ribbonBar()->setPanelAlignment(SARibbonAlignment::AlignLeft);
     }
 }
 
@@ -1981,6 +1987,10 @@ void MainWindow::createCategoryMain(SARibbonCategory* categoryPage)
     mComboboxRibbonTheme->addItem(tr("Dark"), static_cast< int >(SARibbonTheme::RibbonThemeDark));
     mComboboxRibbonTheme->insertSeparator(mComboboxRibbonTheme->count());
     mComboboxRibbonTheme->addItem(tr("Dark 2"), static_cast< int >(SARibbonTheme::RibbonThemeDark2));
+    mComboboxRibbonTheme->insertSeparator(mComboboxRibbonTheme->count());
+    mComboboxRibbonTheme->addItem(tr("Fluent UI Light"), static_cast< int >(SARibbonTheme::RibbonThemeFluentUILight));
+    mComboboxRibbonTheme->addItem(tr("Fluent UI Dark"), static_cast< int >(SARibbonTheme::RibbonThemeFluentUIDark));
+    mComboboxRibbonTheme->addItem(tr("Modern Blue"), static_cast< int >(SARibbonTheme::RibbonThemeModernBlue));
     mComboboxRibbonTheme->setCurrentIndex(mComboboxRibbonTheme->findData(static_cast< int >(ribbonTheme())));
     mComboboxRibbonTheme->setSizeAdjustPolicy(QComboBox::AdjustToContentsOnFirstShow);
     connect(
@@ -1989,7 +1999,7 @@ void MainWindow::createCategoryMain(SARibbonCategory* categoryPage)
     panelStyle->addSmallWidget(mComboboxRibbonTheme);
 
     QCheckBox* checkBoxAlignment = new QCheckBox(this);
-    checkBoxAlignment->setText(tr("Alignment Center"));
+    checkBoxAlignment->setText(tr("Panel Center"));
     checkBoxAlignment->setObjectName("checkBoxAlignmentCenter");
     checkBoxAlignment->setWindowTitle(checkBoxAlignment->text());
     connect(checkBoxAlignment, &QCheckBox::clicked, this, &MainWindow::onCheckBoxAlignmentCenterClicked);

@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QFile>
 #include <QHash>
+#include <QResizeEvent>
 #include <QWindowStateChangeEvent>
 #include <QScreen>
 #include <QTimer>
@@ -530,6 +531,19 @@ void SARibbonMainWindow::setRibbonTheme(SARibbonTheme theme)
     if (d_ptr->mCurrentRibbonTheme != theme) {
         d_ptr->mCurrentRibbonTheme = theme;
         SA::applyRibbonTheme(this, ribbonBar(), theme);
+        if (SARibbonBar* bar = ribbonBar()) {
+            const bool isModernBlue    = (theme == SARibbonTheme::RibbonThemeModernBlue);
+            const QMargins ribbonMargins = isModernBlue ? QMargins(0, 0, 0, 0) : QMargins(3, 0, 3, 0);
+            bar->setContentsMargins(ribbonMargins);
+            // 应用/恢复主题配套的布局参数
+            sa_apply_ribbon_theme_layout(bar, theme);
+            sa_configure_ribbon_theme_options(bar, theme, d_ptr->mWindowButtonGroup);
+            if (isModernBlue && d_ptr->mWindowButtonGroup) {
+                bar->updateRibbonGeometry();
+                QResizeEvent resizeEvent(size(), size());
+                QApplication::sendEvent(this, &resizeEvent);
+            }
+        }
         Q_EMIT ribbonThemeChanged(theme);
     }
 }

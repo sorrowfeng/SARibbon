@@ -65,6 +65,38 @@ void SARibbonTabBar::setTabMargin(const QMargins& tabMargin)
 
 /**
  * \if ENGLISH
+ * @brief Set the tab item height
+ * @param height The tab item height, 0 means using the default tabbar height
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 设置tab项的高度
+ * @param height tab项高度，0表示使用tabbar默认高度
+ * \endif
+ */
+void SARibbonTabBar::setTabItemHeight(int height)
+{
+	mTabItemHeight = qMax(0, height);
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the tab item height
+ * @return The tab item height
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取tab项的高度
+ * @return tab项高度
+ * \endif
+ */
+int SARibbonTabBar::tabItemHeight() const
+{
+	return mTabItemHeight;
+}
+
+/**
+ * \if ENGLISH
  * @brief Estimates the size of a tab
  *
  * Unlike the system default tabbar, SARibbonTabBar's tab height is the same as the tabbar height, and does not consider vertical distribution
@@ -104,6 +136,11 @@ QSize SARibbonTabBar::tabSizeHint(int index) const
 		padding += 4;
 	}
 	const int textWidth = fm.size(Qt::TextShowMnemonic, opt.text).width();
-    QSize csz           = QSize(textWidth + opt.iconSize.width() + hframe + widgetWidth + padding, height());
-    return style()->sizeFromContents(QStyle::CT_TabBarTab, &opt, csz, this);
+	const int tabItemHeight = (mTabItemHeight > 0) ? qMin(mTabItemHeight, height()) : height();
+	QSize csz = QSize(textWidth + opt.iconSize.width() + hframe + widgetWidth + padding, tabItemHeight);
+	QSize hint = style()->sizeFromContents(QStyle::CT_TabBarTab, &opt, csz, this);
+	if (mTabItemHeight > 0) {
+		hint.setHeight(tabItemHeight);
+	}
+	return hint;
 }
