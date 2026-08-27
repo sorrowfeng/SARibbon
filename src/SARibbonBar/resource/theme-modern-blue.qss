@@ -63,27 +63,27 @@ SARibbonCategory > SARibbonSeparatorWidget {
     margin-bottom: 4px;
 }
 
-SARibbonPannel {
+SARibbonPanel {
     background-color: #ffffff;
     border: none;
     color: #4f5b6b;
 }
 
-SARibbonPannelLabel {
+SARibbonPanelLabel {
     background-color: transparent;
     color: #6f7c8d;
 }
 
-SARibbonPannel > SARibbonButtonGroupWidget {
+SARibbonPanel > SARibbonButtonGroupWidget {
     border: 1px solid #d7dde8;
     border-radius: 4px;
 }
 
-SARibbonPannelOptionButton {
+SARibbonPanelOptionButton {
     background-color: transparent;
     color: #45617f;
 }
-SARibbonPannelOptionButton:hover {
+SARibbonPanelOptionButton:hover {
     background-color: #eaf5ff;
     border: 0px;
 }
