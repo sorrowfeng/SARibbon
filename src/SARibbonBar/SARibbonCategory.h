@@ -1,8 +1,8 @@
-﻿#ifndef SARIBBONCATEGORY_H
+#ifndef SARIBBONCATEGORY_H
 #define SARIBBONCATEGORY_H
 #include "SARibbonGlobal.h"
 #include <QFrame>
-#include "SARibbonPannel.h"
+#include "SARibbonPanel.h"
 #include <QScopedPointer>
 #include <QPushButton>
 #include <QWheelEvent>
@@ -12,153 +12,212 @@ class QHBoxLayout;
 class QWheelEvent;
 class SARibbonBar;
 class SARibbonCategoryLayout;
+
 /**
- * @brief 一项ribbon tab页
- * @note SARibbonCategory的windowTitle影响了其在SARibbonBar的标签显示，
- * 如果要改标签名字，直接调用SARibbonCategory的setWindowTitle函数
+ * \if ENGLISH
+ * @brief Ribbon category page containing multiple panels
+ *
+ * Each Category represents a tab page in the Ribbon, containing multiple panels (SARibbonPanel).
+ * It acts as a container for organizing related actions and controls into logical groups.
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 包含多个面板的Ribbon类别页面
+ *
+ * 每个Category代表Ribbon中的一个标签页，包含多个面板（SARibbonPanel）。
+ * 它作为一个容器，用于将相关的操作和控件组织成逻辑组。
+ * \endif
  */
 class SA_RIBBON_EXPORT SARibbonCategory : public QFrame
 {
-	Q_OBJECT
-	SA_RIBBON_DECLARE_PRIVATE(SARibbonCategory)
-	friend class SARibbonBar;
-	friend class SARibbonContextCategory;
-	Q_PROPERTY(bool isCanCustomize READ isCanCustomize WRITE setCanCustomize)
-	Q_PROPERTY(QString categoryName READ categoryName WRITE setCategoryName)
+    Q_OBJECT
+    SA_RIBBON_DECLARE_PRIVATE(SARibbonCategory)
+    friend class SARibbonBar;
+    friend class SARibbonContextCategory;
+    Q_PROPERTY(bool isCanCustomize READ isCanCustomize WRITE setCanCustomize)
+    Q_PROPERTY(QString categoryName READ categoryName WRITE setCategoryName NOTIFY categoryNameChanged)
 public:
-	using FpPannelIterate = std::function< bool(SARibbonPannel*) >;
+    using FpPanelIterate = std::function< bool(SARibbonPanel*) >;
 
 public:
-	explicit SARibbonCategory(QWidget* p = nullptr);
-	explicit SARibbonCategory(const QString& name, QWidget* p = nullptr);
-	~SARibbonCategory();
+    /// Constructor
+    explicit SARibbonCategory(QWidget* p = nullptr);
+    /// Constructor with name
+    explicit SARibbonCategory(const QString& name, QWidget* p = nullptr);
+    /// Destructor
+    ~SARibbonCategory();
 
-	// category的名字
-	QString categoryName() const;
+    /// Get the category name
+    QString categoryName() const;
 
-	// 设置category名字，等同setWindowTitle
-	void setCategoryName(const QString& title);
+    /// Set the category name
+    void setCategoryName(const QString& title);
 
-	// 设置pannel的模式
-	SARibbonPannel::PannelLayoutMode pannelLayoutMode() const;
-	void setPannelLayoutMode(SARibbonPannel::PannelLayoutMode m);
+    /// Get the panel layout mode
+    SARibbonPanel::PanelLayoutMode panelLayoutMode() const;
 
-	// 添加pannel
-	SARibbonPannel* addPannel(const QString& title);
+    /// Set the panel layout mode
+    void setPanelLayoutMode(SARibbonPanel::PanelLayoutMode m);
 
-	// 添加pannel
-	void addPannel(SARibbonPannel* pannel);
+    /// Add a panel with title
+    SARibbonPanel* addPanel(const QString& title);
 
-	// qt designer专用
-	Q_INVOKABLE void addPannel(QWidget* pannel);
+    /// Add an existing panel
+    void addPanel(SARibbonPanel* panel);
 
-	// 插入pannel
-	SARibbonPannel* insertPannel(const QString& title, int index);
+    /// Add panel for Qt Designer
+    Q_INVOKABLE void addPanel(QWidget* panel);
 
-	// 通过名字查找pannel
-	SARibbonPannel* pannelByName(const QString& title) const;
+    /// Create and insert a new panel at index position
+    SARibbonPanel* insertPanel(const QString& title, int index);
 
-	// 通过ObjectName查找pannel
-	SARibbonPannel* pannelByObjectName(const QString& objname) const;
+    /// Insert an existing panel at index position
+    void insertPanel(SARibbonPanel* panel, int index);
 
-	// 通过索引找到pannel，如果超过索引范围，会返回nullptr
-	SARibbonPannel* pannelByIndex(int index) const;
+    /// Find panel by name
+    SARibbonPanel* panelByName(const QString& title) const;
 
-	// 查找pannel的index
-	int pannelIndex(SARibbonPannel* p) const;
+    /// Find panel by ObjectName
+    SARibbonPanel* panelByObjectName(const QString& objname) const;
 
-	// 移动一个Pannel从from index到to index
-	void movePannel(int from, int to);
+    /// Find panel by index, returns nullptr if out of range
+    SARibbonPanel* panelByIndex(int index) const;
 
-	// 把pannel从Category中移除，不会销毁，此时pannel的所有权归还操作者
-	bool takePannel(SARibbonPannel* pannel);
+    /// Get the index of a panel
+    int panelIndex(SARibbonPanel* p) const;
 
-	// 移除Pannel，Category会直接回收SARibbonPannel内存
-	bool removePannel(SARibbonPannel* pannel);
-	bool removePannel(int index);
+    /// Move a panel from one index to another
+    void movePanel(int from, int to);
 
-	// 返回所有的Pannel
-	QList< SARibbonPannel* > pannelList() const;
+    /// Detach panel from SARibbonCategory management
+    bool takePanel(SARibbonPanel* panel);
 
-	//
-	QSize sizeHint() const Q_DECL_OVERRIDE;
+    /// Remove panel and delete it
+    bool removePanel(SARibbonPanel* panel);
 
-	// 如果是ContextCategory，此函数返回true
-	bool isContextCategory() const;
+    /// Remove panel by index
+    bool removePanel(int index);
 
-	// pannel的个数
-	int pannelCount() const;
+    /// Get all panels
+    QList< SARibbonPanel* > panelList() const;
 
-	// 判断是否可以自定义
-	bool isCanCustomize() const;
-	void setCanCustomize(bool b);
+    /// Check if this is a context category
+    bool isContextCategory() const;
 
-	// 设置pannel的标题栏高度
-	int pannelTitleHeight() const;
-	void setPannelTitleHeight(int h);
+    /// Get the number of panels
+    int panelCount() const;
 
-	// 设置pannel是否显示标题栏
-	bool isEnableShowPannelTitle() const;
-	void setEnableShowPannelTitle(bool on);
+    /// Check if customization is allowed
+    bool isCanCustomize() const;
+    /// Set whether customization is allowed
+    void setCanCustomize(bool b);
 
-	// 设置Category的对齐方式
-	void setCategoryAlignment(SARibbonAlignment al);
-	SARibbonAlignment categoryAlignment() const;
+    /// Get panel title bar height
+    int panelTitleHeight() const;
+    /// Set panel title bar height
+    void setPanelTitleHeight(int h);
 
-	// 设置pannel的spacing
-	void setPannelSpacing(int n);
-	int pannelSpacing() const;
+    /// Check if panel title bar is displayed
+    bool isEnableShowPanelTitle() const;
+    /// Set whether to display panel title
+    void setEnableShowPanelTitle(bool on);
 
-	// 设置pannel按钮的icon尺寸，large action不受此尺寸影响
-	void setPannelToolButtonIconSize(const QSize& s);
-	QSize pannelToolButtonIconSize() const;
+    /// Set category alignment
+    void setCategoryAlignment(SARibbonAlignment al);
+    /// Get category alignment
+    SARibbonAlignment categoryAlignment() const;
 
-	// 获取对应的ribbonbar，如果没有加入ribbonbar的管理，此值为null
-	SARibbonBar* ribbonBar() const;
+    /// Set panel spacing
+    void setPanelSpacing(int n);
+    /// Get panel spacing
+    int panelSpacing() const;
 
-	// 刷新category的尺寸布局
-	void updateItemGeometry();
+    /// Set panel large icon size
+    void setPanelLargeIconSize(const QSize& largeSize);
+    /// Get panel large icon size
+    QSize panelLargeIconSize() const;
 
-	// 此函数会遍历Category下的所有pannel,执行函数指针，函数指针返回false则停止迭代
-	bool iteratePannel(FpPannelIterate fp) const;
+    /// Set panel small icon size
+    void setPanelSmallIconSize(const QSize& smallSize);
+    /// Get panel small icon size
+    QSize panelSmallIconSize() const;
+
+    /// Set panel tool button icon sizes
+    void setPanelToolButtonIconSize(const QSize& smallSize, const QSize& largeSize);
+    /// Get panel tool button icon sizes
+    QPair< QSize, QSize > panelToolButtonIconSize() const;
+
+    /// Get the parent ribbonbar, returns null if not managed
+    SARibbonBar* ribbonBar() const;
+
+    /// Refresh category layout, call after changing ribbon mode
+    void updateItemGeometry();
+
+    /// Set whether to use animation when scrolling
+    void setUseAnimatingScroll(bool useAnimating);
+    /// Check if animation is used when scrolling
+    bool isUseAnimatingScroll() const;
+
+    /// Set wheel scroll step in pixels
+    void setWheelScrollStep(int step);
+    /// Get wheel scroll step
+    int wheelScrollStep() const;
+
+    /// Set animation duration in milliseconds
+    void setAnimationDuration(int duration);
+    /// Get animation duration in milliseconds
+    int animationDuration() const;
+
+    /// Check if panel text word wrap is enabled
+    bool isEnableWordWrap() const;
+
+    /// Check if icon-right-text mode is enabled
+    bool isEnableIconRightText() const;
+
+    /// Get button maximum aspect ratio
+    qreal buttonMaximumAspectRatio() const;
+
+    /// Iterate through all panels
+    bool iteratePanel(FpPanelIterate fp) const;
+
+    QSize sizeHint() const Q_DECL_OVERRIDE;
 Q_SIGNALS:
-	/**
-	 * @brief category标题发生了改变信号
-	 * @param n
-	 */
-	void categoryNameChanged(const QString& n);
+    /// Emitted when category name changes
+    void categoryNameChanged(const QString& n);
 
-	/**
-	 * @brief 参考QToolBar::actionTriggered的信号
-	 * @param action
-	 */
-	void actionTriggered(QAction* action);
+    /// Emitted when an action is triggered
+    void actionTriggered(QAction* action);
 
 protected:
-	virtual bool event(QEvent* e) override;
-	// 处理滚轮事件
-	void wheelEvent(QWheelEvent* event) override;
-	//
-	void changeEvent(QEvent* event) override;
+    virtual bool event(QEvent* e) override;
+    /// Handle wheel event
+    void wheelEvent(QWheelEvent* event) override;
+    /// Handle change event
+    void changeEvent(QEvent* event) override;
 
-	// 标记这个是上下文标签
-	void markIsContextCategory(bool isContextCategory = true);
+    /// Mark this as a context category
+    void markIsContextCategory(bool isContextCategory = true);
 
-	// 获取SARibbonCategoryLayoutlayout
-	SARibbonCategoryLayout* categoryLayout() const;
+    /// Get the category layout
+    SARibbonCategoryLayout* categoryLayout() const;
+
+    /// Set whether panel button text word wrap is enabled
+    void setEnableWordWrap(bool on);
+
+    /// Set whether button text is displayed to the right of the icon
+    void setEnableIconRightText(bool on);
+
+    /// Set button maximum aspect ratio
+    void setButtonMaximumAspectRatio(qreal fac = 1.4);
 };
 
-/**
- * @brief SARibbonCategory无法完全显示时，显示的调整按钮
- *
- * 重新定义是为了防止被外部的样式影响,同时可以使用SARibbonCategoryScrollButton的样式定义
- */
+/// Scroll button for SARibbonCategory when content exceeds width
 class SA_RIBBON_EXPORT SARibbonCategoryScrollButton : public QToolButton
 {
-	Q_OBJECT
+    Q_OBJECT
 public:
-	explicit SARibbonCategoryScrollButton(Qt::ArrowType arr, QWidget* p = nullptr);
-	~SARibbonCategoryScrollButton();
+    explicit SARibbonCategoryScrollButton(Qt::ArrowType arr, QWidget* p = nullptr);
+    ~SARibbonCategoryScrollButton();
 };
 
 #endif  // SARIBBONCATEGORY_H

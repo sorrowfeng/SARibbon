@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 SET(VERSION_SHORT 0.1)
 project(WidgetWithRibbon VERSION ${VERSION_SHORT})
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -6,7 +6,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 add_definitions(-DFRAMELESSHELPER_FEATURE_static_build=-1)
 # qt库加载，最低要求5.9
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} 5.9 COMPONENTS Core Gui Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} 5.12 COMPONENTS Core Gui Widgets REQUIRED)
 
 add_executable(WidgetWithRibbon
     RibbonWidget.h
@@ -30,10 +30,10 @@ if(NOT TARGET SARibbonBar)
     find_package(SARibbonBar REQUIRED)
 endif()
 
-target_link_libraries(WidgetWithRibbon PUBLIC SARibbonBar::SARibbonBar)
-target_link_libraries(WidgetWithRibbon PUBLIC
-                                       Qt${QT_VERSION_MAJOR}::Core 
-                                       Qt${QT_VERSION_MAJOR}::Gui 
+target_link_libraries(WidgetWithRibbon PRIVATE SARibbonBar::SARibbonBar)
+target_link_libraries(WidgetWithRibbon PRIVATE
+                                       Qt${QT_VERSION_MAJOR}::Core
+                                       Qt${QT_VERSION_MAJOR}::Gui
                                        Qt${QT_VERSION_MAJOR}::Widgets
 )
 
@@ -52,8 +52,13 @@ set_target_properties(WidgetWithRibbon PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
 )
 
+include(GNUInstallDirs)
 install(TARGETS WidgetWithRibbon
+    BUNDLE DESTINATION .
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_BINDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt_finalize_executable(WidgetWithRibbon)
+endif()

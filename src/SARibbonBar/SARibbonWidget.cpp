@@ -6,10 +6,11 @@
 #include <QApplication>
 #include <QDebug>
 #include <QFile>
-#include <QHash>
 #include <QLayout>
 #include <QScreen>
-
+#include "SARibbonUtil.h"
+#include "SARibbonThemeManager.h"
+#include <QTimer>
 /**
  * @brief The SARibbonWidget::PrivateData class
  */
@@ -31,6 +32,17 @@ SARibbonWidget::PrivateData::PrivateData(SARibbonWidget* p) : q_ptr(p)
 //===================================================
 // SARibbonWidget
 //===================================================
+/**
+ * \if ENGLISH
+ * @brief Constructs a SARibbonWidget instance
+ * @param parent Parent widget
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 构造一个 SARibbonWidget 实例
+ * @param parent 父窗口部件
+ * \endif
+ */
 SARibbonWidget::SARibbonWidget(QWidget* parent) : QWidget(parent), d_ptr(new SARibbonWidget::PrivateData(this))
 {
 	// 直接创建SARibbonBar
@@ -41,15 +53,45 @@ SARibbonWidget::SARibbonWidget(QWidget* parent) : QWidget(parent), d_ptr(new SAR
 	SARibbonBar* ribbon = new SARibbonBar(this);
 	setRibbonBar(ribbon);
 	connect(qApp, &QApplication::primaryScreenChanged, this, &SARibbonWidget::onPrimaryScreenChanged);
+	SA_D(d);
+	if (SA::isOperatingSystemInDarkMode()
+		&& d->mCurrentRibbonTheme == SARibbonTheme::RibbonThemeOffice2021Blue) {
+		d->mCurrentRibbonTheme = SARibbonTheme::RibbonThemeDark;
+	}
+	QTimer::singleShot(0, this, [this]() {
+		SA_D(d);
+		SARibbonTheme t = ribbonTheme();
+		if (d->mCurrentRibbonTheme == t) {
+			SA::applyRibbonTheme(this, ribbonBar(), t);
+		} else {
+			setRibbonTheme(t);
+		}
+	});
 }
 
+/**
+ * \if ENGLISH
+ * @brief Destructor
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 析构函数
+ * \endif
+ */
 SARibbonWidget::~SARibbonWidget()
 {
 }
 
 /**
+ * \if ENGLISH
+ * @brief Returns the ribbonbar, returns nullptr if not using ribbon mode
+ * @return Pointer to the SARibbonBar, or nullptr if not using ribbon mode
+ * \endif
+ *
+ * \if CHINESE
  * @brief 返回ribbonbar，如果不是使用ribbon模式，返回nullptr
- * @return
+ * @return 指向SARibbonBar的指针，如果不是使用ribbon模式，返回nullptr
+ * \endif
  */
 SARibbonBar* SARibbonWidget::ribbonBar() const
 {
@@ -61,8 +103,15 @@ SARibbonBar* SARibbonWidget::ribbonBar() const
 }
 
 /**
+ * \if ENGLISH
+ * @brief Sets the ribbonbar
+ * @param bar Pointer to the SARibbonBar to set
+ * \endif
+ *
+ * \if CHINESE
  * @brief 设置ribbonbar
- * @param bar
+ * @param bar 要设置的SARibbonBar指针
+ * \endif
  */
 void SARibbonWidget::setRibbonBar(SARibbonBar* bar)
 {
@@ -73,137 +122,89 @@ void SARibbonWidget::setRibbonBar(SARibbonBar* bar)
 }
 
 /**
- * @brief SARibbonMainWindow::setRibbonTheme
+ * \if ENGLISH
+ * @brief Sets the ribbon theme
+ *
+ * Note that setting the theme in the constructor may not take full effect. Use QTimer to put it at the end of the queue:
+ * @code
+ * QTimer::singleShot(0, this, [ this ]() { this->setRibbonTheme(SARibbonMainWindow::RibbonThemeDark); });
+ * @endcode
+ * @param theme The theme to set
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 设置ribbon主题
  *
  * 注意主题在构造函数设置主题会不完全生效，使用QTimer投放到队列最后执行即可
  * @code
  * QTimer::singleShot(0, this, [ this ]() { this->setRibbonTheme(SARibbonMainWindow::RibbonThemeDark); });
  * @endcode
- * @param theme
+ * @param theme 要设置的主题
+ * \endif
  */
 void SARibbonWidget::setRibbonTheme(SARibbonTheme theme)
 {
-	sa_set_ribbon_theme(this, theme);
-	d_ptr->mCurrentRibbonTheme = theme;
-	if (SARibbonBar* bar = ribbonBar()) {
-		auto theme = ribbonTheme();
-		bar->setContentsMargins(QMargins(0, 0, 0, 0));
-		// 应用/恢复主题配套的布局参数
-		sa_apply_ribbon_theme_layout(bar, theme);
-		sa_configure_ribbon_theme_options(bar, theme);
-		// 尺寸修正
-		switch (theme) {
-		case SARibbonTheme::RibbonThemeWindows7:
-		case SARibbonTheme::RibbonThemeOffice2013:
-		case SARibbonTheme::RibbonThemeOffice2016Blue:
-		case SARibbonTheme::RibbonThemeDark:
-		case SARibbonTheme::RibbonThemeDark2: {
-			//! 在设置qss后需要针对margin信息重新设置进SARibbonTabBar中
-			//! office2013.qss的margin信息如下设置
-			//! margin-top: 0px;
-			//! margin-right: 0px;
-			//! margin-left: 5px;
-			//! margin-bottom: 0px;
-			SARibbonTabBar* tab = bar->ribbonTabBar();
-			if (!tab) {
-				break;
-			}
-			tab->setTabMargin(QMargins(5, 0, 0, 0));
-		} break;
-		case SARibbonTheme::RibbonThemeOffice2021Blue: {
-			SARibbonTabBar* tab = bar->ribbonTabBar();
-			if (!tab) {
-				break;
-			}
-			//! 在设置qss后需要针对margin信息重新设置进SARibbonTabBar中
-			//! office2021.qss的margin信息如下设置
-			//! margin-top: 0px;
-			//! margin-right: 5px;
-			//! margin-left: 5px;
-			//! margin-bottom: 0px;
-			tab->setTabMargin(QMargins(5, 0, 5, 0));
-		} break;
-		case SARibbonTheme::RibbonThemeFluentUILight:
-		case SARibbonTheme::RibbonThemeFluentUIDark: {
-			SARibbonTabBar* tab = bar->ribbonTabBar();
-			if (!tab) {
-				break;
-			}
-			tab->setTabMargin(QMargins(5, 0, 0, 0));
-		} break;
-		case SARibbonTheme::RibbonThemeModernBlue: {
-			SARibbonTabBar* tab = bar->ribbonTabBar();
-			if (!tab) {
-				break;
-			}
-			tab->setTabMargin(QMargins(8, 0, 8, 0));
-		} break;
-		default:
-			break;
+	if (d_ptr->mCurrentRibbonTheme != theme) {
+		d_ptr->mCurrentRibbonTheme = theme;
+		SA::applyRibbonTheme(this, ribbonBar(), theme);
+		if (SARibbonBar* bar = ribbonBar()) {
+			bar->setContentsMargins(QMargins(0, 0, 0, 0));
+			// 应用/恢复主题配套的布局参数
+			sa_apply_ribbon_theme_layout(bar, theme);
+			sa_configure_ribbon_theme_options(bar, theme);
 		}
-		// 上下文标签颜色设置,以及基线颜色设置
-		static const SARibbonBar::FpContextCategoryHighlight csDarkerHighlight = [](const QColor& c) -> QColor {
-			return c.darker();
-		};
-		static const SARibbonBar::FpContextCategoryHighlight csVibrantHighlight = [](const QColor& c) -> QColor {
-			return SA::makeColorVibrant(c);
-		};
-		switch (theme) {
-		case SARibbonTheme::RibbonThemeWindows7:
-		case SARibbonTheme::RibbonThemeOffice2013:
-		case SARibbonTheme::RibbonThemeDark:
-			bar->setContextCategoryColorList(QList< QColor >());  //< 设置空颜色列表会重置为默认色系
-			bar->setContextCategoryColorHighLight(csVibrantHighlight);
-			break;
-		case SARibbonTheme::RibbonThemeOffice2016Blue:
-			bar->setContextCategoryColorList(QList< QColor >() << QColor(18, 64, 120));  //< 设置空颜色列表会重置为默认色系
-			bar->setContextCategoryColorHighLight(csDarkerHighlight);
-			break;
-		case SARibbonTheme::RibbonThemeOffice2021Blue:
-			bar->setContextCategoryColorList(QList< QColor >() << QColor(209, 207, 209));  //< 设置空颜色列表会重置为默认色系
-			bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(39, 96, 167); });
-			break;
-		case SARibbonTheme::RibbonThemeFluentUILight:
-			bar->setContextCategoryColorList(QList< QColor >() << QColor(243, 243, 243));
-			bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(0, 103, 192); });
-			break;
-		case SARibbonTheme::RibbonThemeFluentUIDark:
-			bar->setContextCategoryColorList(QList< QColor >());
-			bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return QColor(0, 120, 212); });
-			break;
-		case SARibbonTheme::RibbonThemeModernBlue:
-			bar->setContextCategoryColorList(QList< QColor >() << QColor(30, 148, 212) << QColor(15, 48, 128));
-			bar->setContextCategoryColorHighLight([](const QColor& c) -> QColor { return c.darker(130); });
-			break;
-		default:
-			break;
-		}
-		// 基线颜色设置
-		if (SARibbonTheme::RibbonThemeOffice2013 == theme) {
-			bar->setTabBarBaseLineColor(QColor(186, 201, 219));
-		} else {
-			bar->setTabBarBaseLineColor(QColor());
-		}
+		Q_EMIT ribbonThemeChanged(theme);
 	}
 }
 
+/**
+ * \if ENGLISH
+ * @brief Gets the current ribbon theme
+ * @return The current SARibbonTheme
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取当前的ribbon主题
+ * @return 当前的SARibbonTheme
+ * \endif
+ */
 SARibbonTheme SARibbonWidget::ribbonTheme() const
 {
 	return (d_ptr->mCurrentRibbonTheme);
 }
 
+/**
+ * \if ENGLISH
+ * @brief Checks if ribbon is being used
+ * @return true if ribbon is being used, false otherwise
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 检查是否使用ribbon
+ * @return 如果使用ribbon则返回true，否则返回false
+ * \endif
+ */
 bool SARibbonWidget::isUseRibbon() const
 {
 	return (nullptr != ribbonBar());
 }
 
 /**
-   @brief 设置窗口
-
-   @param 窗口指针
-   @note 窗口的所有权归SARibbonWidget管理
-   @sa widget
-   @note 原来设置的窗口会被delete
+ * \if ENGLISH
+ * @brief Sets the widget
+ * @param w Widget pointer
+ * @note The ownership of the widget is managed by SARibbonWidget
+ * @sa widget
+ * @note The previously set widget will be deleted
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 设置窗口
+ * @param w 窗口指针
+ * @note 窗口的所有权归SARibbonWidget管理
+ * @sa widget
+ * @note 原来设置的窗口会被delete
+ * \endif
  */
 void SARibbonWidget::setWidget(QWidget* w)
 {
@@ -218,9 +219,15 @@ void SARibbonWidget::setWidget(QWidget* w)
 }
 
 /**
-   @brief 获取设置的窗口
-
-    @return 如果没有，返回nullptr
+ * \if ENGLISH
+ * @brief Gets the set widget
+ * @return The widget, or nullptr if none is set
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取设置的窗口
+ * @return 如果没有，返回nullptr
+ * \endif
  */
 QWidget* SARibbonWidget::widget() const
 {
@@ -234,6 +241,17 @@ QWidget* SARibbonWidget::widget() const
 	return nullptr;
 }
 
+/**
+ * \if ENGLISH
+ * @brief Takes the widget from the layout
+ * @return The widget that was taken, or nullptr if no widget was found
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 从布局中取出窗口
+ * @return 被取出的窗口，如果没有找到则返回nullptr
+ * \endif
+ */
 QWidget* SARibbonWidget::takeWidget()
 {
 	QLayout* lay = layout();
@@ -257,8 +275,15 @@ QWidget* SARibbonWidget::takeWidget()
 }
 
 /**
+ * \if ENGLISH
+ * @brief Signal triggered when the primary screen changes
+ * @param screen The new primary screen
+ * \endif
+ *
+ * \if CHINESE
  * @brief 主屏幕切换触发的信号
- * @param screen
+ * @param screen 新的主屏幕
+ * \endif
  */
 void SARibbonWidget::onPrimaryScreenChanged(QScreen* screen)
 {
@@ -270,52 +295,73 @@ void SARibbonWidget::onPrimaryScreenChanged(QScreen* screen)
 	}
 }
 
-void sa_set_ribbon_theme(QWidget* w, SARibbonTheme theme)
+/**
+ * \if ENGLISH
+ * @brief Apply or restore the overall layout parameters of SARibbonBar according to the theme
+ *
+ * Only affects the ModernBlue theme: backs up the current layout on first entry and restores it on exit
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 根据主题应用/恢复SARibbonBar的整体布局参数
+ *
+ * 只影响ModernBlue主题：首次切入时备份当前布局，切出时恢复
+ * \endif
+ */
+void sa_apply_ribbon_theme_layout(SARibbonBar* bar, SARibbonTheme theme)
 {
-	static QHash< int, QString > qssCache;
-	const int themeKey = static_cast< int >(theme);
-	if (!qssCache.contains(themeKey)) {
-		QFile file;
-		switch (theme) {
-		case SARibbonTheme::RibbonThemeWindows7:
-			file.setFileName(":/theme/resource/theme-win7.qss");
-			break;
-		case SARibbonTheme::RibbonThemeOffice2013:
-			file.setFileName(":/theme/resource/theme-office2013.qss");
-			break;
-		case SARibbonTheme::RibbonThemeOffice2016Blue:
-			file.setFileName(":/theme/resource/theme-office2016-blue.qss");
-			break;
-		case SARibbonTheme::RibbonThemeOffice2021Blue:
-			file.setFileName(":/theme/resource/theme-office2021-blue.qss");
-			break;
-		case SARibbonTheme::RibbonThemeDark:
-			file.setFileName(":/theme/resource/theme-dark.qss");
-			break;
-		case SARibbonTheme::RibbonThemeDark2:
-			file.setFileName(":/theme/resource/theme-dark2.qss");
-			break;
-		case SARibbonTheme::RibbonThemeFluentUILight:
-			file.setFileName(":/theme/resource/theme-fluent-ui-light.qss");
-			break;
-		case SARibbonTheme::RibbonThemeFluentUIDark:
-			file.setFileName(":/theme/resource/theme-fluent-ui-dark.qss");
-			break;
-		case SARibbonTheme::RibbonThemeModernBlue:
-			file.setFileName(":/theme/resource/theme-modern-blue.qss");
-			break;
-		default:
-			file.setFileName(":/theme/resource/theme-office2013.qss");
-			break;
-		}
-		if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-			return;
-		}
-		qssCache.insert(themeKey, QString::fromUtf8(file.readAll()));
+	if (!bar) {
+		return;
 	}
-	w->setStyleSheet(qssCache.value(themeKey));
+	// 是否已应用ModernBlue布局的标记，只有应用过ModernBlue布局，切出时才需要恢复
+	const char* appliedProp = "_sa_theme_layout_modernblue";
+	if (theme == SARibbonTheme::RibbonThemeModernBlue) {
+		if (!bar->property(appliedProp).toBool()) {
+			// 首次切入ModernBlue前备份当前布局，切出时恢复
+			bar->setProperty("_sa_layout_bak_titlevisible", bar->isTitleVisible());
+			bar->setProperty("_sa_layout_bak_titlebarheight", bar->titleBarHeight());
+			bar->setProperty("_sa_layout_bak_tabbarheight", bar->tabBarHeight());
+			bar->setProperty("_sa_layout_bak_ribbonalignment", static_cast< int >(bar->ribbonAlignment()));
+			bar->setProperty("_sa_layout_bak_panelalignment", static_cast< int >(bar->panelAlignment()));
+			bar->setProperty("_sa_layout_bak_minbutton", bar->isMinimumModeButtonVisible());
+			bar->setProperty(appliedProp, true);
+		}
+		// ModernBlue主题只调整标题栏/tab栏：隐藏标题，tab及panel居中
+		// 不改变ribbon风格及panel内部元素的尺寸（图标大小、按钮宽高、panel间距等保持原样）
+		bar->setTitleVisible(false);
+		bar->setTitleBarHeight(48);
+		bar->setTabBarHeight(36);
+		bar->setRibbonAlignment(SARibbonAlignment::AlignCenter);
+		bar->setPanelAlignment(SARibbonAlignment::AlignCenter);
+		bar->showMinimumModeButton(true);
+		if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
+			if (QLayout* lay = rightGroup->layout()) {
+				lay->setContentsMargins(0, 0, 0, 0);
+				lay->setSpacing(2);
+			}
+		}
+	} else if (bar->property(appliedProp).toBool()) {
+		// 从ModernBlue切出，恢复切入前备份的布局
+		bar->setTitleVisible(bar->property("_sa_layout_bak_titlevisible").toBool());
+		bar->setTitleBarHeight(bar->property("_sa_layout_bak_titlebarheight").toInt());
+		bar->setTabBarHeight(bar->property("_sa_layout_bak_tabbarheight").toInt());
+		bar->setRibbonAlignment(static_cast< SARibbonAlignment >(bar->property("_sa_layout_bak_ribbonalignment").toInt()));
+		bar->setPanelAlignment(static_cast< SARibbonAlignment >(bar->property("_sa_layout_bak_panelalignment").toInt()));
+		bar->showMinimumModeButton(bar->property("_sa_layout_bak_minbutton").toBool());
+		bar->setProperty(appliedProp, false);
+	}
+	// 其他主题之间的切换不做任何布局改动
 }
 
+/**
+ * \if ENGLISH
+ * @brief Configure theme-related runtime layout parameters (tabbar centering, window button size, etc.)
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 配置主题相关的运行时布局参数（tabbar 居中、窗口按钮尺寸等）
+ * \endif
+ */
 void sa_configure_ribbon_theme_options(SARibbonBar* bar, SARibbonTheme theme, SARibbonSystemButtonBar* windowButtonGroup)
 {
 	if (!bar) {
@@ -344,49 +390,4 @@ void sa_configure_ribbon_theme_options(SARibbonBar* bar, SARibbonTheme theme, SA
 	} else {
 		windowButtonGroup->resetWindowButtonLayout();
 	}
-}
-
-void sa_apply_ribbon_theme_layout(SARibbonBar* bar, SARibbonTheme theme)
-{
-	if (!bar) {
-		return;
-	}
-	// 是否已应用ModernBlue布局的标记，只有应用过ModernBlue布局，切出时才需要恢复
-	const char* appliedProp = "_sa_theme_layout_modernblue";
-	if (theme == SARibbonTheme::RibbonThemeModernBlue) {
-		if (!bar->property(appliedProp).toBool()) {
-			// 首次切入ModernBlue前备份当前布局，切出时恢复
-			bar->setProperty("_sa_layout_bak_titlevisible", bar->isTitleVisible());
-			bar->setProperty("_sa_layout_bak_titlebarheight", bar->titleBarHeight());
-			bar->setProperty("_sa_layout_bak_tabbarheight", bar->tabBarHeight());
-			bar->setProperty("_sa_layout_bak_ribbonalignment", static_cast< int >(bar->ribbonAlignment()));
-			bar->setProperty("_sa_layout_bak_pannelalignment", static_cast< int >(bar->pannelAlignment()));
-			bar->setProperty("_sa_layout_bak_minbutton", bar->haveShowMinimumModeButton());
-			bar->setProperty(appliedProp, true);
-		}
-		// ModernBlue主题只调整标题栏/tab栏：隐藏标题，tab及pannel居中
-		// 不改变ribbon风格及pannel内部元素的尺寸（图标大小、按钮宽高、pannel间距等保持原样）
-		bar->setTitleVisible(false);
-		bar->setTitleBarHeight(48);
-		bar->setTabBarHeight(36);
-		bar->setRibbonAlignment(SARibbonAlignment::AlignCenter);
-		bar->setPannelAlignment(SARibbonAlignment::AlignCenter);
-		bar->showMinimumModeButton(true);
-		if (SARibbonButtonGroupWidget* rightGroup = bar->rightButtonGroup()) {
-			if (QLayout* lay = rightGroup->layout()) {
-				lay->setContentsMargins(0, 0, 0, 0);
-				lay->setSpacing(2);
-			}
-		}
-	} else if (bar->property(appliedProp).toBool()) {
-		// 从ModernBlue切出，恢复切入前备份的布局
-		bar->setTitleVisible(bar->property("_sa_layout_bak_titlevisible").toBool());
-		bar->setTitleBarHeight(bar->property("_sa_layout_bak_titlebarheight").toInt());
-		bar->setTabBarHeight(bar->property("_sa_layout_bak_tabbarheight").toInt());
-		bar->setRibbonAlignment(static_cast< SARibbonAlignment >(bar->property("_sa_layout_bak_ribbonalignment").toInt()));
-		bar->setPannelAlignment(static_cast< SARibbonAlignment >(bar->property("_sa_layout_bak_pannelalignment").toInt()));
-		bar->showMinimumModeButton(bar->property("_sa_layout_bak_minbutton").toBool());
-		bar->setProperty(appliedProp, false);
-	}
-	// 其他主题之间的切换不做任何布局改动
 }

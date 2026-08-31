@@ -5,6 +5,9 @@
 #include <QHoverEvent>
 #include <QApplication>
 #include <QDebug>
+#include <QScreen>
+#include <QWindow>
+#include "SARibbonQt5Compat.hpp"
 #include "SARibbonMainWindow.h"
 class SAPrivateFramelessWidgetData;
 
@@ -19,7 +22,7 @@ class SAFramelessHelper::PrivateData
 
 public:
     PrivateData(SAFramelessHelper* p);
-    QHash< QWidget*, SAPrivateFramelessWidgetData* > m_widgetDataHash;
+    std::unique_ptr< SAPrivateFramelessWidgetData > m_widgetData;
     bool m_bWidgetMovable { true };
     bool m_bWidgetResizable { true };
     bool m_bRubberBandOnResize { true };
@@ -30,15 +33,18 @@ SAFramelessHelper::PrivateData::PrivateData(SAFramelessHelper* p) : q_ptr(p)
 {
 }
 
-/*****
- * CursorPosCalculator
- * 计算鼠标是否位于左、上、右、下、左上角、左下角、右上角、右下角
- *****/
+/**
+ * @brief 计算鼠标是否位于左、上、右、下、左上角、左下角、右上角、右下角。
+ *
+ * 该类用于计算鼠标相对于窗口边框的位置，以便确定是否可以进行缩放操作。
+ */
 class SAPrivateFramelessCursorPosCalculator
 {
 public:
     explicit SAPrivateFramelessCursorPosCalculator();
+    // 重置鼠标位置状态
     void reset();
+    // 根据全局鼠标位置和窗口矩形重新计算鼠标位置状态。
     void recalculate(const QPoint& globalMousePos, const QRect& frameRect);
 
 public:
@@ -65,6 +71,11 @@ SAPrivateFramelessCursorPosCalculator::SAPrivateFramelessCursorPosCalculator()
     reset();
 }
 
+/**
+ * @brief 重置鼠标位置状态。
+ *
+ * 将所有鼠标位置标志重置为false。
+ */
 void SAPrivateFramelessCursorPosCalculator::reset()
 {
     mIsOnEdges           = false;
@@ -78,10 +89,17 @@ void SAPrivateFramelessCursorPosCalculator::reset()
     mIsOnBottomRightEdge = false;
 }
 
+/**
+ * @brief 根据全局鼠标位置和窗口矩形重新计算鼠标位置状态。
+ * @param globalMousePos 全局鼠标位置。
+ * @param frameRect 窗口的矩形区域。
+ */
 void SAPrivateFramelessCursorPosCalculator::recalculate(const QPoint& gMousePos, const QRect& frameRect)
 {
-    int globalMouseX = gMousePos.x();
-    int globalMouseY = gMousePos.y();
+    qreal dpiScale        = SAFramelessHelper::getScreenDpiScale(QApplication::widgetAt(gMousePos));
+    int scaledBorderWidth = s_borderWidth * dpiScale;
+    int globalMouseX      = gMousePos.x();
+    int globalMouseY      = gMousePos.y();
 
     int frameX = frameRect.x();
     int frameY = frameRect.y();
@@ -89,13 +107,13 @@ void SAPrivateFramelessCursorPosCalculator::recalculate(const QPoint& gMousePos,
     int frameWidth  = frameRect.width();
     int frameHeight = frameRect.height();
 
-    mIsOnLeftEdge = (globalMouseX >= frameX && globalMouseX <= frameX + s_borderWidth);
+    mIsOnLeftEdge = (globalMouseX >= frameX && globalMouseX <= frameX + scaledBorderWidth);
 
-    mIsOnRightEdge = (globalMouseX >= frameX + frameWidth - s_borderWidth && globalMouseX <= frameX + frameWidth);
+    mIsOnRightEdge = (globalMouseX >= frameX + frameWidth - scaledBorderWidth && globalMouseX <= frameX + frameWidth);
 
-    mIsOnTopEdge = (globalMouseY >= frameY && globalMouseY <= frameY + s_borderWidth);
+    mIsOnTopEdge = (globalMouseY >= frameY && globalMouseY <= frameY + scaledBorderWidth);
 
-    mIsOnBottomEdge = (globalMouseY >= frameY + frameHeight - s_borderWidth && globalMouseY <= frameY + frameHeight);
+    mIsOnBottomEdge = (globalMouseY >= frameY + frameHeight - scaledBorderWidth && globalMouseY <= frameY + frameHeight);
 
     mIsOnTopLeftEdge     = mIsOnTopEdge && mIsOnLeftEdge;
     mIsOnBottomLeftEdge  = mIsOnBottomEdge && mIsOnLeftEdge;
@@ -105,10 +123,11 @@ void SAPrivateFramelessCursorPosCalculator::recalculate(const QPoint& gMousePos,
     mIsOnEdges = mIsOnLeftEdge || mIsOnRightEdge || mIsOnTopEdge || mIsOnBottomEdge;
 }
 
-/*****
- * WidgetData
- * 更新鼠标样式、移动窗体、缩放窗体
- *****/
+/**
+ * @brief 更新鼠标样式、移动窗体、缩放窗体。
+ *
+ * 该类负责处理窗口的鼠标事件，包括鼠标移动、按下、释放等，以实现窗口的移动和缩放功能。
+ */
 class SAPrivateFramelessWidgetData
 {
 public:
@@ -208,7 +227,7 @@ bool SAPrivateFramelessWidgetData::handleWidgetEvent(QEvent* event)
         return (handleMouseMoveEvent(static_cast< QMouseEvent* >(event)));
 
     case QEvent::Leave:
-        return (handleLeaveEvent(static_cast< QMouseEvent* >(event)));
+        return (handleLeaveEvent(event));
 
     case QEvent::HoverMove:
         return (handleHoverMoveEvent(static_cast< QHoverEvent* >(event)));
@@ -268,7 +287,6 @@ void SAPrivateFramelessWidgetData::updateCursorShape(const QPoint& gMousePos)
 void SAPrivateFramelessWidgetData::resizeWidget(const QPoint& gMousePos)
 {
     QRect origRect;
-
     if (d->m_bRubberBandOnResize) {
         origRect = m_pRubberBand->frameGeometry();
     } else {
@@ -280,7 +298,7 @@ void SAPrivateFramelessWidgetData::resizeWidget(const QPoint& gMousePos)
     int right  = origRect.right();
     int bottom = origRect.bottom();
 
-    origRect.getCoords(&left, &top, &right, &bottom);
+    // origRect.getCoords(&left, &top, &right, &bottom);
 
     int minWidth  = m_pWidget->minimumWidth();
     int minHeight = m_pWidget->minimumHeight();
@@ -342,18 +360,26 @@ void SAPrivateFramelessWidgetData::moveWidget(const QPoint& gMousePos)
     }
 }
 
+/**
+ * @brief 处理鼠标事件-划过、按下、释放、移动。
+ * @param event 要处理的事件指针。
+ * @return 如果事件被处理，则返回true；否则返回false。
+ */
 bool SAPrivateFramelessWidgetData::handleMousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton) {
-        m_bLeftButtonPressed      = true;
-        m_bLeftButtonTitlePressed = event->pos().y() < m_moveMousePos.s_titleHeight;
+        m_bLeftButtonPressed = true;
+
+        qreal dpiScale        = SAFramelessHelper::getScreenDpiScale(m_pWidget);
+        int scaledTitleHeight = SAPrivateFramelessCursorPosCalculator::s_titleHeight * dpiScale;
+        // 这里要用eventPosY获取相对位置
+        m_bLeftButtonTitlePressed = SA::compat::eventPosY(event) < scaledTitleHeight;
 
         QRect frameRect = m_pWidget->frameGeometry();
-        auto gp         = SA_MOUSEEVENT_GLOBALPOS_POINT(event);
+        auto gp         = SA::compat::eventGlobalPos(event);
         m_pressedMousePos.recalculate(gp, frameRect);
 
         m_ptDragPos = gp - frameRect.topLeft();
-
         if (m_pressedMousePos.mIsOnEdges) {
             if (m_pWidget->isMaximized()) {
                 // 窗口在最大化状态时，点击边界不做任何处理
@@ -394,33 +420,55 @@ bool SAPrivateFramelessWidgetData::handleMouseReleaseEvent(QMouseEvent* event)
 
 bool SAPrivateFramelessWidgetData::handleMouseMoveEvent(QMouseEvent* event)
 {
-    QPoint p = SA_MOUSEEVENT_GLOBALPOS_POINT(event);
+    QPoint globalpos = SA::compat::eventGlobalPos(event);
     if (m_bLeftButtonPressed) {
         if (d->m_bWidgetResizable && m_pressedMousePos.mIsOnEdges) {
             if (m_pWidget->isMaximized()) {
                 // 窗口在最大化状态时，点击边界不做任何处理
                 return (false);
             }
-            resizeWidget(p);
+            resizeWidget(globalpos);
             return (true);
         } else if (d->m_bWidgetMovable && m_bLeftButtonTitlePressed) {
             if (m_pWidget->isMaximized()) {
                 // 先求出窗口到鼠标的相对位置
                 QRect normalGeometry = m_pWidget->normalGeometry();
                 m_pWidget->showNormal();
-                p.ry() -= 10;
-                p.rx() -= (normalGeometry.width() / 2);
-                m_pWidget->move(p);
+                // 修改前：
+                // p.ry() -= 10;
+                // p.rx() -= (normalGeometry.width() / 2);
+
+                // 修改后：使用DPI缩放偏移量
+                qreal dpiScale = SAFramelessHelper::getScreenDpiScale(m_pWidget);
+                globalpos.ry() -= 10 * dpiScale;  // 缩放偏移量
+                globalpos.rx() -= (normalGeometry.width() / 2);
+
+                m_pWidget->move(globalpos);
                 // 这时要重置m_ptDragPos
                 m_ptDragPos = QPoint(normalGeometry.width() / 2, 10);
                 return (true);
             }
-            moveWidget(p);
+
+            bool isOutScreen          = true;
+            QList< QScreen* > screens = QGuiApplication::screens();
+            for (int i = 0; i < screens.size(); i++) {
+                QScreen* pScreen   = screens[ i ];
+                QRect geometryRect = pScreen->availableGeometry();
+                if (geometryRect.contains(globalpos)) {
+                    isOutScreen = false;
+                    break;
+                }
+            }
+            if (isOutScreen) {
+                event->ignore();
+                return false;
+            }
+            moveWidget(globalpos);
             return (true);
         }
         return (false);
     } else if (d->m_bWidgetResizable) {
-        updateCursorShape(p);
+        updateCursorShape(globalpos);
     }
     return (false);
 }
@@ -438,7 +486,11 @@ bool SAPrivateFramelessWidgetData::handleLeaveEvent(QEvent* event)
 bool SAPrivateFramelessWidgetData::handleHoverMoveEvent(QHoverEvent* event)
 {
     if (d->m_bWidgetResizable) {
-        updateCursorShape(m_pWidget->mapToGlobal(SA_HOVEREVENT_POS_POINT(event)));
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        updateCursorShape(m_pWidget->mapToGlobal(event->pos()));
+#else
+        updateCursorShape(SA::compat::eventGlobalPos(event));
+#endif
     }
     return (false);
 }
@@ -451,7 +503,12 @@ bool SAPrivateFramelessWidgetData::handleDoubleClickedMouseEvent(QMouseEvent* ev
             if (mainwindow) {
                 if (mainwindow->windowFlags() & Qt::WindowMaximizeButtonHint) {
                     // 在最大化按钮显示时才进行shownormal处理
-                    bool titlePressed = event->pos().y() < m_moveMousePos.s_titleHeight;
+
+                    // 修改后：考虑DPI缩放
+                    qreal dpiScale        = SAFramelessHelper::getScreenDpiScale(m_pWidget);
+                    int scaledTitleHeight = SAPrivateFramelessCursorPosCalculator::s_titleHeight * dpiScale;
+                    bool titlePressed     = SA::compat::eventPosY(event) < scaledTitleHeight;
+
                     if (titlePressed) {
                         if (m_pWidget->isMaximized()) {
                             m_pWidget->showNormal();
@@ -491,12 +548,6 @@ SAFramelessHelper::SAFramelessHelper(QObject* parent) : QObject(parent), d_ptr(n
 
 SAFramelessHelper::~SAFramelessHelper()
 {
-    QList< QWidget* > keys = d_ptr->m_widgetDataHash.keys();
-    int size               = keys.size();
-
-    for (int i = 0; i < size; ++i) {
-        delete d_ptr->m_widgetDataHash.take(keys[ i ]);
-    }
 }
 
 bool SAFramelessHelper::eventFilter(QObject* obj, QEvent* event)
@@ -508,9 +559,8 @@ bool SAFramelessHelper::eventFilter(QObject* obj, QEvent* event)
     case QEvent::MouseButtonRelease:
     case QEvent::MouseButtonDblClick:
     case QEvent::Leave: {
-        SAPrivateFramelessWidgetData* data = d_ptr->m_widgetDataHash.value(static_cast< QWidget* >(obj));
-        if (data) {
-            return (data->handleWidgetEvent(event));
+        if (d_ptr->m_widgetData) {
+            return (d_ptr->m_widgetData->handleWidgetEvent(event));
         }
         break;
     }
@@ -521,33 +571,33 @@ bool SAFramelessHelper::eventFilter(QObject* obj, QEvent* event)
     return (QObject::eventFilter(obj, event));
 }
 
+/**
+ * @brief 激活指定的顶级窗体
+ * 使指定的顶级窗体能够使用 SAFramelessHelper 提供的无边框移动和缩放功能。
+ * @param topLevelWidget 要激活的顶级窗体指针。
+ */
 void SAFramelessHelper::activateOn(QWidget* topLevelWidget)
 {
-    if (!d_ptr->m_widgetDataHash.contains(topLevelWidget)) {
-        SAPrivateFramelessWidgetData* data = new SAPrivateFramelessWidgetData(d_ptr.get(), topLevelWidget);
-        d_ptr->m_widgetDataHash.insert(topLevelWidget, data);
-
-        topLevelWidget->installEventFilter(this);
-    }
+    d_ptr->m_widgetData.reset(new SAPrivateFramelessWidgetData(d_ptr.get(), topLevelWidget));
+    topLevelWidget->installEventFilter(this);
 }
 
+/**
+ * @brief 从指定的顶级窗体移除帮助功能
+ * 停止对指定顶级窗体的无边框移动和缩放功能支持。
+ * @param topLevelWidget 要移除功能的顶级窗体指针。
+ */
 void SAFramelessHelper::removeFrom(QWidget* topLevelWidget)
 {
-    SAPrivateFramelessWidgetData* data = d_ptr->m_widgetDataHash.take(topLevelWidget);
-
-    if (data) {
-        topLevelWidget->removeEventFilter(this);
-        delete data;
-    }
+    d_ptr->m_widgetData.reset(nullptr);
+    topLevelWidget->removeEventFilter(this);
 }
 
 void SAFramelessHelper::setRubberBandOnMove(bool movable)
 {
-    d_ptr->m_bRubberBandOnMove                  = movable;
-    QList< SAPrivateFramelessWidgetData* > list = d_ptr->m_widgetDataHash.values();
-
-    foreach (SAPrivateFramelessWidgetData* data, list) {
-        data->updateRubberBandStatus();
+    d_ptr->m_bRubberBandOnMove = movable;
+    if (d_ptr->m_widgetData) {
+        d_ptr->m_widgetData->updateRubberBandStatus();
     }
 }
 
@@ -563,11 +613,9 @@ void SAFramelessHelper::setWidgetResizable(bool resizable)
 
 void SAFramelessHelper::setRubberBandOnResize(bool resizable)
 {
-    d_ptr->m_bRubberBandOnResize                = resizable;
-    QList< SAPrivateFramelessWidgetData* > list = d_ptr->m_widgetDataHash.values();
-
-    foreach (SAPrivateFramelessWidgetData* data, list) {
-        data->updateRubberBandStatus();
+    d_ptr->m_bRubberBandOnResize = resizable;
+    if (d_ptr->m_widgetData) {
+        d_ptr->m_widgetData->updateRubberBandStatus();
     }
 }
 
@@ -613,4 +661,32 @@ uint SAFramelessHelper::borderWidth()
 uint SAFramelessHelper::titleHeight()
 {
     return (SAPrivateFramelessCursorPosCalculator::s_titleHeight);
+}
+
+qreal SAFramelessHelper::getScreenDpiScale(const QWidget* widget)
+{
+    if (!widget) {
+        if (QApplication::primaryScreen()) {
+            return QApplication::primaryScreen()->devicePixelRatio();
+        }
+        return 1.0;
+    }
+
+    QWindow* window = widget->windowHandle();
+    if (!window) {
+        const QWidget* nativeParent = widget->nativeParentWidget();
+        if (nativeParent) {
+            window = nativeParent->windowHandle();
+        }
+    }
+
+    if (window && window->screen()) {
+        return window->screen()->devicePixelRatio();
+    }
+
+    if (QApplication::primaryScreen()) {
+        return QApplication::primaryScreen()->devicePixelRatio();
+    }
+
+    return 1.0;
 }

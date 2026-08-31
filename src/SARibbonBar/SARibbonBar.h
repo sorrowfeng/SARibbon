@@ -4,6 +4,7 @@
 #include "SARibbonContextCategory.h"
 #include "SARibbonGlobal.h"
 #include <QMenuBar>
+#include <QIcon>
 #include <QScopedPointer>
 #include <QVariant>
 
@@ -14,503 +15,703 @@ class SARibbonTabBar;
 class SARibbonButtonGroupWidget;
 class SARibbonQuickAccessBar;
 class SARibbonStackedWidget;
+class SARibbonTitleIconWidget;
 
 /**
-  @brief SARibbonBar继承于QMenuBar,在SARibbonMainWindow中直接替换了原来的QMenuBar
-
-  通过setRibbonStyle函数设置ribbon的风格:
-
-  @code
-  void setRibbonStyle(RibbonStyles v);
-  @endcode
-
-  SARibbonBar参考office和wps，提供了四种风格的Ribbon模式,@ref SARibbonBar::RibbonStyles
-
-  如果想ribbon占用的空间足够小，WpsLiteStyleTwoRow模式能比OfficeStyle节省35%的高度空间
-
-  如何生成ribbon?先看看一个传统的Menu/ToolBar是如何生成的：
-
-  @code
-  void MainWindow::MainWindow()
-  {
-     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-     QToolBar *fileToolBar = addToolBar(tr("File"));
-     //生成action
-     QAction *newAct = new QAction(newIcon, tr("&New"), this);
-     fileMenu->addAction(newAct);
-     fileToolBar->addAction(newAct);
-
-     QAction *openAct = new QAction(openIcon, tr("&Open..."), this);
-     fileMenu->addAction(openAct);
-     fileToolBar->addAction(openAct);
-  }
-  @endcode
-
-  传统的Menu/ToolBar主要通过QMenu的addMenu添加菜单,通过QMainWindow::addToolBar生成QToolBar,
-  再把QAction设置进QMenu和QToolBar中
-
-  SARibbonBar和传统方法相似，不过相对于传统的Menu/ToolBar QMenu和QToolBar是平级的，
-  Ribbon是有明显的层级关系，SARibbonBar下面是 @ref SARibbonCategory，
-  SARibbonCategory下面是@ref SARibbonPannel ，SARibbonPannel下面是@ref SARibbonToolButton ，
-  SARibbonToolButton管理着QAction
-
-  因此，生成一个ribbon只需以下几个函数：
-  @code
-  SARibbonCategory * SARibbonBar::addCategoryPage(const QString& title);
-  SARibbonPannel * SARibbonCategory::addPannel(const QString& title);
-  SARibbonToolButton * SARibbonPannel::addLargeAction(QAction *action);
-  SARibbonToolButton * SARibbonPannel::addSmallAction(QAction *action);
-  @endcode
-
-  因此生成步骤如下：
-
-  @code
-  //成员变量
-  SARibbonCategory* categoryMain;
-  SARibbonPannel* FilePannel;
-
-  //建立ui
-  void setupRibbonUi()
-  {
-      ......
-      //ribbonwindow为SARibbonMainWindow
-      SARibbonBar* ribbon = ribbonwindow->ribbonBar();
-      ribbon->setRibbonStyle(SARibbonBar::WpsLiteStyle);
-      //添加一个Main标签
-      categoryMain = ribbon->addCategoryPage(QStringLiteral("Main"));
-      //Main标签下添加一个File Pannel
-      FilePannel = categoryMain->addPannel(QStringLiteral("FilePannel"));
-      //开始为File Pannel添加action
-      FilePannel->addLargeAction(actionNew);
-      FilePannel->addLargeAction(actionOpen);
-      FilePannel->addLargeAction(actionSave);
-      FilePannel->addSmallAction(actionImportMesh);
-      FilePannel->addSmallAction(actionImportGeometry);
-  }
-  @endcode
+ * \if ENGLISH
+ * @brief SARibbonBar inherits from QMenuBar and directly replaces the original QMenuBar in SARibbonMainWindow
+ *
+ * Set the ribbon style using the setRibbonStyle function:
+ *
+ * @code
+ * void setRibbonStyle(RibbonStyles v);
+ * @endcode
+ *
+ * SARibbonBar references Office and WPS, providing four styles of Ribbon modes, @ref SARibbonBar::RibbonStyles
+ *
+ * If you want the ribbon to occupy minimal space, WpsLiteStyleTwoRow mode can save 35% height space compared to OfficeStyle
+ *
+ * How to create a ribbon? First, let's see how a traditional Menu/ToolBar is created:
+ *
+ * @code
+ * void MainWindow::MainWindow()
+ * {
+ *  QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+ *  QToolBar *fileToolBar = addToolBar(tr("File"));
+ *  // Create action
+ *  QAction *newAct = new QAction(newIcon, tr("&New"), this);
+ *  fileMenu->addAction(newAct);
+ *  fileToolBar->addAction(newAct);
+ *
+ *  QAction *openAct = new QAction(openIcon, tr("&Open..."), this);
+ *  fileMenu->addAction(openAct);
+ *  fileToolBar->addAction(openAct);
+ * }
+ * @endcode
+ *
+ * Traditional Menu/ToolBar mainly uses QMenu's addMenu to add menus, and QMainWindow::addToolBar to generate QToolBar,
+ * then sets QAction into QMenu and QToolBar.
+ *
+ * SARibbonBar is similar to the traditional method, but compared to traditional Menu/ToolBar where QMenu and QToolBar are at the same level,
+ * Ribbon has a clear hierarchical relationship: SARibbonBar is above @ref SARibbonCategory,
+ * SARibbonCategory is above @ref SARibbonPanel, SARibbonPanel is above @ref SARibbonToolButton,
+ * and SARibbonToolButton manages QAction.
+ *
+ * Therefore, creating a ribbon only requires the following functions:
+ * @code
+ * SARibbonCategory * SARibbonBar::addCategoryPage(const QString& title);
+ * SARibbonPanel * SARibbonCategory::addPanel(const QString& title);
+ * SARibbonToolButton * SARibbonPanel::addLargeAction(QAction *action);
+ * SARibbonToolButton * SARibbonPanel::addSmallAction(QAction *action);
+ * @endcode
+ *
+ * Therefore, the creation steps are as follows:
+ *
+ * @code
+ * // Member variables
+ * SARibbonCategory* categoryMain;
+ * SARibbonPanel* FilePanel;
+ *
+ * // Build UI
+ * void setupRibbonUi()
+ * {
+ *   ......
+ *   // ribbonwindow is SARibbonMainWindow
+ *   SARibbonBar* ribbon = ribbonwindow->ribbonBar();
+ *   ribbon->setRibbonStyle(SARibbonBar::WpsLiteStyle);
+ *   // Add a Main tab
+ *   categoryMain = ribbon->addCategoryPage(QStringLiteral("Main"));
+ *   // Add a File Panel under the Main tab
+ *   FilePanel = categoryMain->addPanel(QStringLiteral("FilePanel"));
+ *   // Start adding actions to File Panel
+ *   FilePanel->addLargeAction(actionNew);
+ *   FilePanel->addLargeAction(actionOpen);
+ *   FilePanel->addLargeAction(actionSave);
+ *   FilePanel->addSmallAction(actionImportMesh);
+ *   FilePanel->addSmallAction(actionImportGeometry);
+ * }
+ * @endcode
+ * \endif
+ *
+ * \if CHINESE
+ * @brief SARibbonBar继承于QMenuBar,在SARibbonMainWindow中直接替换了原来的QMenuBar
+ *
+ * 通过setRibbonStyle函数设置ribbon的风格:
+ *
+ * @code
+ * void setRibbonStyle(RibbonStyles v);
+ * @endcode
+ *
+ * SARibbonBar参考office和wps，提供了四种风格的Ribbon模式,@ref SARibbonBar::RibbonStyles
+ *
+ * 如果想ribbon占用的空间足够小，WpsLiteStyleTwoRow模式能比OfficeStyle节省35%的高度空间
+ *
+ * 如何生成ribbon?先看看一个传统的Menu/ToolBar是如何生成的：
+ *
+ * @code
+ * void MainWindow::MainWindow()
+ * {
+ *  QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
+ *  QToolBar *fileToolBar = addToolBar(tr("File"));
+ *  //生成action
+ *  QAction *newAct = new QAction(newIcon, tr("&New"), this);
+ *  fileMenu->addAction(newAct);
+ *  fileToolBar->addAction(newAct);
+ *
+ *  QAction *openAct = new QAction(openIcon, tr("&Open..."), this);
+ *  fileMenu->addAction(openAct);
+ *  fileToolBar->addAction(openAct);
+ * }
+ * @endcode
+ *
+ * 传统的Menu/ToolBar主要通过QMenu的addMenu添加菜单,通过QMainWindow::addToolBar生成QToolBar,
+ * 再把QAction设置进QMenu和QToolBar中
+ *
+ * SARibbonBar和传统方法相似，不过相对于传统的Menu/ToolBar QMenu和QToolBar是平级的，
+ * Ribbon是有明显的层级关系，SARibbonBar下面是 @ref SARibbonCategory，
+ * SARibbonCategory下面是@ref SARibbonPanel ，SARibbonPanel下面是@ref SARibbonToolButton ，
+ * SARibbonToolButton管理着QAction
+ *
+ * 因此，生成一个ribbon只需以下几个函数：
+ * @code
+ * SARibbonCategory * SARibbonBar::addCategoryPage(const QString& title);
+ * SARibbonPanel * SARibbonCategory::addPanel(const QString& title);
+ * SARibbonToolButton * SARibbonPanel::addLargeAction(QAction *action);
+ * SARibbonToolButton * SARibbonPanel::addSmallAction(QAction *action);
+ * @endcode
+ *
+ * 因此生成步骤如下：
+ *
+ * @code
+ * //成员变量
+ * SARibbonCategory* categoryMain;
+ * SARibbonPanel* FilePanel;
+ *
+ * //建立ui
+ * void setupRibbonUi()
+ * {
+ *   ......
+ *   //ribbonwindow为SARibbonMainWindow
+ *   SARibbonBar* ribbon = ribbonwindow->ribbonBar();
+ *   ribbon->setRibbonStyle(SARibbonBar::WpsLiteStyle);
+ *   //添加一个Main标签
+ *   categoryMain = ribbon->addCategoryPage(QStringLiteral("Main"));
+ *   //Main标签下添加一个File Panel
+ *   FilePanel = categoryMain->addPanel(QStringLiteral("FilePanel"));
+ *   //开始为File Panel添加action
+ *   FilePanel->addLargeAction(actionNew);
+ *   FilePanel->addLargeAction(actionOpen);
+ *   FilePanel->addLargeAction(actionSave);
+ *   FilePanel->addSmallAction(actionImportMesh);
+ *   FilePanel->addSmallAction(actionImportGeometry);
+ * }
+ * @endcode
+ * \endif
  */
 class SA_RIBBON_EXPORT SARibbonBar : public QMenuBar
 {
-	Q_OBJECT
-	SA_RIBBON_DECLARE_PRIVATE(SARibbonBar)
-	friend class SARibbonMainWindow;
-	friend class SARibbonSystemButtonBar;
-	Q_PROPERTY(RibbonStyles ribbonStyle READ currentRibbonStyle WRITE setRibbonStyle)
-	Q_PROPERTY(bool minimumMode READ isMinimumMode WRITE setMinimumMode)
-	Q_PROPERTY(bool minimumModeButton READ haveShowMinimumModeButton WRITE showMinimumModeButton)
-	Q_PROPERTY(QColor windowTitleTextColor READ windowTitleTextColor WRITE setWindowTitleTextColor)
-	Q_PROPERTY(QColor tabBarBaseLineColor READ tabBarBaseLineColor WRITE setTabBarBaseLineColor)
-	Q_PROPERTY(Qt::Alignment windowTitleAligment READ windowTitleAligment WRITE setWindowTitleAligment)
-	Q_PROPERTY(bool enableWordWrap READ isEnableWordWrap WRITE setEnableWordWrap)
-	Q_PROPERTY(bool enableShowPannelTitle READ isEnableShowPannelTitle WRITE setEnableShowPannelTitle)
-	Q_PROPERTY(bool tabOnTitle READ isTabOnTitle WRITE setTabOnTitle)
-	Q_PROPERTY(SARibbonPannel::PannelLayoutMode pannelLayoutMode READ pannelLayoutMode WRITE setPannelLayoutMode)
+    Q_OBJECT
+    SA_RIBBON_DECLARE_PRIVATE(SARibbonBar)
+    friend class SARibbonMainWindow;
+    friend class SARibbonSystemButtonBar;
+    Q_PROPERTY(RibbonStyles ribbonStyle READ currentRibbonStyle WRITE setRibbonStyle NOTIFY ribbonStyleChanged)
+    Q_PROPERTY(bool minimumMode READ isMinimumMode WRITE setMinimumMode NOTIFY ribbonModeChanged)
+    Q_PROPERTY(bool minimumModeButton READ isMinimumModeButtonVisible WRITE showMinimumModeButton)
+    Q_PROPERTY(QColor windowTitleTextColor READ windowTitleTextColor WRITE setWindowTitleTextColor)
+    Q_PROPERTY(QColor tabBarBaseLineColor READ tabBarBaseLineColor WRITE setTabBarBaseLineColor)
+    Q_PROPERTY(Qt::Alignment windowTitleAlignment READ windowTitleAlignment WRITE setWindowTitleAlignment)
+    Q_PROPERTY(bool enableWordWrap READ isEnableWordWrap WRITE setEnableWordWrap)
+    Q_PROPERTY(bool enableShowPanelTitle READ isEnableShowPanelTitle WRITE setEnableShowPanelTitle)
+    Q_PROPERTY(bool enableIconRightText READ isEnableIconRightText WRITE setEnableIconRightText)
+    Q_PROPERTY(bool tabOnTitle READ isTabOnTitle WRITE setTabOnTitle)
+    Q_PROPERTY(SARibbonPanel::PanelLayoutMode panelLayoutMode READ panelLayoutMode WRITE setPanelLayoutMode)
 
 public:
-	enum RibbonStyleFlag
-	{
-		RibbonStyleLoose    = 0x0001,  // bit:0000 0001
-		RibbonStyleCompact  = 0x0002,  // bit:0000 0010
-		RibbonStyleThreeRow = 0x0010,  // bit:0001 0000
-		RibbonStyleTwoRow   = 0x0020,  // bit:0010 0000
+enum RibbonStyleFlag
+    {
+        RibbonStyleLoose       = 0x0001,  // bit:0000 0001
+        RibbonStyleCompact     = 0x0002,  // bit:0000 0010
+        RibbonStyleThreeRow    = 0x0010,  // bit:0001 0000
+        RibbonStyleTwoRow      = 0x0020,  // bit:0010 0000
+        RibbonStyleSingleRow   = 0x0040,  // bit:0100 0000
 
-		RibbonStyleLooseThreeRow   = RibbonStyleLoose | RibbonStyleThreeRow,    ///< 宽松结构，3行模式
-		RibbonStyleCompactThreeRow = RibbonStyleCompact | RibbonStyleThreeRow,  ///< 紧凑结构，3行模式
-		RibbonStyleLooseTwoRow     = RibbonStyleLoose | RibbonStyleTwoRow,      ///< 宽松结构，2行模式
-		RibbonStyleCompactTwoRow   = RibbonStyleCompact | RibbonStyleTwoRow     ///< 紧凑结构，2行模式
-	};
-	Q_ENUM(RibbonStyleFlag)
-	Q_DECLARE_FLAGS(RibbonStyles, RibbonStyleFlag)
-	Q_FLAG(RibbonStyles)
+        RibbonStyleLooseThreeRow   = RibbonStyleLoose | RibbonStyleThreeRow,    ///< 宽松结构，3 行模式
+        RibbonStyleCompactThreeRow = RibbonStyleCompact | RibbonStyleThreeRow,  ///< 紧凑结构，3 行模式
+        RibbonStyleLooseTwoRow     = RibbonStyleLoose | RibbonStyleTwoRow,      ///< 宽松结构，2 行模式
+        RibbonStyleCompactTwoRow   = RibbonStyleCompact | RibbonStyleTwoRow,    ///< 紧凑结构，2 行模式
+        RibbonStyleLooseSingleRow   = RibbonStyleLoose | RibbonStyleSingleRow,  ///< 宽松结构，1 行模式
+        RibbonStyleCompactSingleRow = RibbonStyleCompact | RibbonStyleSingleRow ///< 紧凑结构，1 行模式
+    };
+    Q_ENUM(RibbonStyleFlag)
+    Q_DECLARE_FLAGS(RibbonStyles, RibbonStyleFlag)
+    Q_FLAG(RibbonStyles)
 
-	/**
-	 * @brief 定义当前ribbon 的状态
-	 */
-	enum RibbonMode
-	{
-		MinimumRibbonMode,  ///< 缩小模式
-		NormalRibbonMode    ///< 正常模式
-	};
-	Q_ENUM(RibbonMode)
+    /**
+     * @brief 定义当前ribbon 的状态
+     */
+    enum RibbonMode
+    {
+        MinimumRibbonMode,  ///< 缩小模式
+        NormalRibbonMode    ///< 正常模式
+    };
+    Q_ENUM(RibbonMode)
 public:
-	using FpCategoryIterate = std::function< bool(SARibbonCategory*) >;
-	using FpPannelIterate   = SARibbonCategory::FpPannelIterate;
-	/**
-	 * @brief 这是针对上下文标签的高亮颜色绘制，用户可以设置一个函数指针，来针对上下文标签的高亮颜色进行调整
-	 */
-	using FpContextCategoryHighlight = std::function< QColor(const QColor&) >;
-
-public:
-	// 判断RibbonStyle是否为2行模式
-	static bool isTwoRowStyle(RibbonStyles s);
-	static bool isThreeRowStyle(RibbonStyles s);
-	// 判断是否是office样式
-	static bool isLooseStyle(RibbonStyles s);
-	static bool isCompactStyle(RibbonStyles s);
-	// 获取版本信息
-	static QString versionString();
-
-	// 获取默认的上下文标签颜色列表
-	static QList< QColor > defaultContextCategoryColorList();
-
-	// 初始化高分辨率适配
-	static void initHighDpi();
+    using FpCategoryIterate = std::function< bool(SARibbonCategory*) >;
+    using FpPanelIterate    = SARibbonCategory::FpPanelIterate;
+    /**
+     * @brief 这是针对上下文标签的高亮颜色绘制，用户可以设置一个函数指针，来针对上下文标签的高亮颜色进行调整
+     */
+    using FpContextCategoryHighlight = std::function< QColor(const QColor&) >;
 
 public:
-	// 构造函数
-	explicit SARibbonBar(QWidget* parent = nullptr);
-	~SARibbonBar();
-	// 获取applicationButton
-	QAbstractButton* applicationButton();
+    /// Check if the ribbon style is two-row mode
+    static bool isTwoRowStyle(RibbonStyles s);
+    /// Check if the ribbon style is three-row mode
+    static bool isThreeRowStyle(RibbonStyles s);
+    /// Check if the ribbon style is loose (Office) style
+    static bool isLooseStyle(RibbonStyles s);
+    /// Check if the ribbon style is compact (WPS) style
+    static bool isCompactStyle(RibbonStyles s);
+    /// Check if the ribbon style is single-row mode
+    static bool isSingleRowStyle(RibbonStyles s);
+    /// Get version information
+    static QString versionString();
 
-	// 设置applicationButton
-	void setApplicationButton(QAbstractButton* btn);
+    /// Get default context category color list
+    static QList< QColor > defaultContextCategoryColorList();
 
-	// 获取tabbar
-	SARibbonTabBar* ribbonTabBar();
+    /// Initialize high DPI support
+    static void initHighDpi();
 
-	// 添加一个标签
-	SARibbonCategory* addCategoryPage(const QString& title);
-	void addCategoryPage(SARibbonCategory* category);
+public:
+    /// Constructor
+    explicit SARibbonBar(QWidget* parent = nullptr);
+    /// Destructor
+    ~SARibbonBar();
+    /// Get application button
+    QAbstractButton* applicationButton();
 
-	// 为了支持Qt designer,添加的一个重载函数
-	Q_INVOKABLE void addCategoryPage(QWidget* category);
+    /// Set application button
+    void setApplicationButton(QAbstractButton* btn);
 
-	// 添加一个category，category的位置在index，如果当前category数量少于index，将插入到最后
-	SARibbonCategory* insertCategoryPage(const QString& title, int index);
-	void insertCategoryPage(SARibbonCategory* category, int index);
+    /// Get ribbon tab bar
+    SARibbonTabBar* ribbonTabBar();
 
-	// 通过名字查找Category
-	SARibbonCategory* categoryByName(const QString& title) const;
+    /// Add a category page
+    SARibbonCategory* addCategoryPage(const QString& title);
+    /// Add a category page
+    void addCategoryPage(SARibbonCategory* category);
 
-	// 通过ObjectName查找Category
-	SARibbonCategory* categoryByObjectName(const QString& objname) const;
+    /// Overloaded function for Qt designer support
+    Q_INVOKABLE void addCategoryPage(QWidget* category);
 
-	// 通过索引找到category，如果超过索引范围，会返回nullptr
-	SARibbonCategory* categoryByIndex(int index) const;
+    /// Insert a category page at specified index
+    SARibbonCategory* insertCategoryPage(const QString& title, int index);
+    /// Insert a category page at specified index
+    void insertCategoryPage(SARibbonCategory* category, int index);
 
-	// 隐藏category,并不会删除或者取走，只是隐藏
-	void hideCategory(SARibbonCategory* category);
+    /// Find category by name
+    SARibbonCategory* categoryByName(const QString& title) const;
 
-	// 显示被隐藏的category
-	void showCategory(SARibbonCategory* category);
+    /// Find category by object name
+    SARibbonCategory* categoryByObjectName(const QString& objname) const;
 
-	// 判断这个category是否在显示状态，也就是tabbar有这个category
-	bool isCategoryVisible(const SARibbonCategory* c) const;
+    /// Find category by index
+    SARibbonCategory* categoryByIndex(int index) const;
 
-	// 获取category的索引
-	int categoryIndex(const SARibbonCategory* c) const;
+    /// Hide category (not delete)
+    void hideCategory(SARibbonCategory* category);
 
-	// 移动一个Category从from index到to index
-	void moveCategory(int from, int to);
+    /// Show hidden category
+    void showCategory(SARibbonCategory* category);
 
-	// 获取当前显示的所有的SARibbonCategory，包含未显示的SARibbonContextCategory的SARibbonCategory也一并返回
-	QList< SARibbonCategory* > categoryPages(bool getAll = true) const;
+    // Batch set categories visible or hidden, only triggers one relayout at the end
+    void setCategoriesVisible(const QList< SARibbonCategory* >& categories, bool visible);
 
-	// 移除SARibbonCategory
-	void removeCategory(SARibbonCategory* category);
+    /// Check if category is visible
+    bool isCategoryVisible(const SARibbonCategory* c) const;
 
-	// 添加一个上下文标签
-	SARibbonContextCategory*
-	addContextCategory(const QString& title, const QColor& color = QColor(), const QVariant& id = QVariant());
-	void addContextCategory(SARibbonContextCategory* context);
+    /// Get category index
+    int categoryIndex(const SARibbonCategory* c) const;
 
-	// 显示一个上下文标签
-	void showContextCategory(SARibbonContextCategory* context);
+    /// Move category from one index to another
+    void moveCategory(int from, int to);
 
-	// 隐藏一个上下文标签
-	void hideContextCategory(SARibbonContextCategory* context);
+    /// Get all category pages
+    QList< SARibbonCategory* > categoryPages(bool getAll = true) const;
 
-	// 判断上下文是否是在显示状态
-	bool isContextCategoryVisible(SARibbonContextCategory* context);
+    /// Remove category
+    void removeCategory(SARibbonCategory* category);
 
-	// 设置上下文标签的显示或隐藏
-	void setContextCategoryVisible(SARibbonContextCategory* context, bool visible);
+    /// Add a context category
+    SARibbonContextCategory*
+    addContextCategory(const QString& title, const QColor& color = QColor(), const QVariant& id = QVariant());
+    /// Add a context category
+    void addContextCategory(SARibbonContextCategory* context);
 
-	// 获取所有的上下文标签
-	QList< SARibbonContextCategory* > contextCategoryList() const;
+    /// Show context category
+    void showContextCategory(SARibbonContextCategory* context);
 
-	// 移除ContextCategory
-	void destroyContextCategory(SARibbonContextCategory* context);
+    /// Hide context category
+    void hideContextCategory(SARibbonContextCategory* context);
 
-	// 设置为隐藏模式
-	void setMinimumMode(bool isHide);
+    /// Check if context category is visible
+    bool isContextCategoryVisible(SARibbonContextCategory* context);
 
-	// 当前Ribbon是否是隐藏模式
-	bool isMinimumMode() const;
+    /// Set context category visibility
+    void setContextCategoryVisible(SARibbonContextCategory* context, bool visible);
 
-	// 设置显示隐藏ribbon按钮
-	void showMinimumModeButton(bool isShow = true);
+    /// Get all context categories
+    QList< SARibbonContextCategory* > contextCategoryList() const;
 
-	// 是否显示隐藏ribbon按钮
-	bool haveShowMinimumModeButton() const;
+    /// Destroy context category
+    void destroyContextCategory(SARibbonContextCategory* context);
 
-	// 按主题刷新隐藏ribbon按钮图标(深色标题栏主题用白色箭头)
-	void updateMinimumModeButtonIcon(SARibbonTheme theme);
+    /// Get current visible context category tab indexes
+    QList< int > currentVisibleContextCategoryTabIndexs() const;
 
-	// 隐藏ribbon按钮的图标(按主题/状态取色)
-	QIcon minimumModeButtonIcon(SARibbonTheme theme, bool isMinimumMode) const;
+    /// Set minimum mode
+    void setMinimumMode(bool isHide);
 
-	// 隐藏ribbon对应的action
-	QAction* minimumModeAction() const;
+    /// Check if in minimum mode
+    bool isMinimumMode() const;
 
-	// tab双击后最小化ribbon
-	bool isEnableTabDoubleClickToMinimumMode() const;
-	void setTabDoubleClickToMinimumMode(bool on = true) const;
+    /// Show minimum mode button
+    void showMinimumModeButton(bool isShow = true);
 
-	// 当前的模式
-	RibbonMode currentRibbonState() const;
+    /// Check if minimum mode button is shown
+    bool isMinimumModeButtonVisible() const;
 
-	// ribbon tab的高度
-	int tabBarHeight() const;
-	void setTabBarHeight(int h, bool resizeByNow = true);
+    /// Refresh minimum mode button icon by theme (dark titlebar themes use white-inverted icon)
+    void updateMinimumModeButtonIcon(SARibbonTheme theme);
 
-	// 标题栏的高度
-	int titleBarHeight() const;
-	void setTitleBarHeight(int h, bool resizeByNow = true);
+    /// Get minimum mode button icon by theme and state
+    QIcon minimumModeButtonIcon(SARibbonTheme theme, bool isMinimumMode) const;
 
-	// category的高度
-	int categoryHeight() const;
-	void setCategoryHeight(int h, bool resizeByNow = true);
+    /// Get minimum mode action
+    QAction* minimumModeAction() const;
 
-	// 获取正常模式下的mainBar的高度
-	int normalModeMainBarHeight() const;
+    /// Check if tab double click enables minimum mode
+    bool isEnableTabDoubleClickToMinimumMode() const;
+    /// Set tab double click to enable minimum mode
+    void setTabDoubleClickToMinimumMode(bool on = true) const;
 
-	// 最小模式下的MainBar高度
-	int minimumModeMainBarHeight() const;
+    /// Get current ribbon state
+    RibbonMode currentRibbonState() const;
 
-	// 激活tabbar右边的按钮群
-	SARibbonButtonGroupWidget* activeRightButtonGroup();
+    /// Get tab bar height
+    int tabBarHeight() const;
+    /// Set tab bar height
+    void setTabBarHeight(int h, bool resizeByNow = true);
 
-	// 右侧按钮群
-	SARibbonButtonGroupWidget* rightButtonGroup();
+    /// Get title bar height
+    int titleBarHeight() const;
+    /// Set title bar height
+    void setTitleBarHeight(int h, bool resizeByNow = true);
 
-	// 激活QuickAccessBar
-	SARibbonQuickAccessBar* activeQuickAccessBar();
+    /// Get category height
+    int categoryHeight() const;
+    /// Set category height
+    void setCategoryHeight(int h, bool resizeByNow = true);
+
+    /// Get main bar height in normal mode
+    int normalModeMainBarHeight() const;
 
-	// 快速响应栏
-	SARibbonQuickAccessBar* quickAccessBar();
+    /// Get main bar height in minimum mode
+    int minimumModeMainBarHeight() const;
 
-	// 设置ribbon的风格
-	void setRibbonStyle(RibbonStyles v);
-	RibbonStyles currentRibbonStyle() const;
-
-	// 设置当前ribbon的index
-	void setCurrentIndex(int index);
-
-	// 返回当前的tab索引
-	int currentIndex();
-
-	// 确保标签显示出来
-	void raiseCategory(SARibbonCategory* category);
-
-	// 判断当前的行数
-	bool isTwoRowStyle() const;
-	bool isThreeRowStyle() const;
-
-	// 判断当前的样式
-	bool isLooseStyle() const;
-	bool isCompactStyle() const;
-
-	// 更新ribbon的布局数据，此函数适用于一些关键性尺寸变化，换起ribbon下面元素的布局,在发现刷新问题时，可以调用此函数
-	void updateRibbonGeometry();
-
-	// 设置pannel的模式
-	SARibbonPannel::PannelLayoutMode pannelLayoutMode() const;
-	void setPannelLayoutMode(SARibbonPannel::PannelLayoutMode m);
-
-	// 设置tab在title上面，这样可以省略title区域
-	void setTabOnTitle(bool on);
-	bool isTabOnTitle() const;
-
-	// tabbar 底部会绘制一条线条，此接口定义线条颜色
-	void setTabBarBaseLineColor(const QColor& clr);
-	QColor tabBarBaseLineColor() const;
-
-	// 设置标题颜色,如果不设置标题颜色，默认是SARibbonBar的qss的color属性
-	void setWindowTitleTextColor(const QColor& clr);
-	QColor windowTitleTextColor() const;
-
-	// 设置是否显示标题
-	void setTitleVisible(bool on = false);
-	bool isTitleVisible() const;
-
-	// 设置标题的背景颜色
-	void setWindowTitleBackgroundBrush(const QBrush& bk);
-	QBrush windowTitleBackgroundBrush() const;
-
-	// 设置标题的对齐方式
-	void setWindowTitleAligment(Qt::Alignment al);
-	Qt::Alignment windowTitleAligment() const;
-
-	// 设置按钮允许换行，注意图标大小是由文字决定的，两行文字会让图标变小，如果想图标变大，文字不换行是最好的
-	void setEnableWordWrap(bool on);
-	bool isEnableWordWrap() const;
-
-	// 文本宽度估算时的宽度比高度系数,超过此系数的宽度时，开始尝试换行或者省略号显示
-	void setButtonTextEllipsisAspectFactor(qreal fac = 1.4);
-	qreal buttonTextEllipsisAspectFactor() const;
-
-	// 设置pannel的标题栏高度
-	int pannelTitleHeight() const;
-	void setPannelTitleHeight(int h);
-
-	// 设置pannel是否显示标题栏
-	bool isEnableShowPannelTitle() const;
-	void setEnableShowPannelTitle(bool on);
-
-	// 设置pannel的spacing
-	void setPannelSpacing(int n);
-	int pannelSpacing() const;
-
-	// 设置pannel按钮的icon尺寸，large action不受此尺寸影响
-	void setPannelToolButtonIconSize(const QSize& s);
-	QSize pannelToolButtonIconSize() const;
-
-	// ModernBlue 等主题专用的 tabbar 布局参数
-	void setCompactTabBarCentered(bool centered);
-	bool isCompactTabBarCentered() const;
-	void setStackedTopGap(int gap);
-	int stackedTopGap() const;
-
-	// 获取SARibbonStackedWidget，谨慎使用此函数
-	SARibbonStackedWidget* ribbonStackedWidget();
-
-	// 上下文标签的颜色列表，上下文标签显示的时候，会从颜色列表中取颜色进行标签的渲染
-	void setContextCategoryColorList(const QList< QColor >& cls);
-	QList< QColor > contextCategoryColorList() const;
-
-	// 设置context category 标题的文字颜色
-	void setContextCategoryTitleTextColor(const QColor& clr);
-	QColor contextCategoryTitleTextColor() const;
-
-	// 设置上下文标签颜色的高亮方法
-	void setContextCategoryColorHighLight(FpContextCategoryHighlight fp);
-
-	// 设置ribbon的对齐方式
-	void setRibbonAlignment(SARibbonAlignment al);
-	SARibbonAlignment ribbonAlignment() const;
-
-	// 设置pannel的水平对齐方式
-	void setPannelAlignment(SARibbonAlignment al);
-	SARibbonAlignment pannelAlignment() const;
-
-	// 此函数会遍历SARibbonBar下的所有Category，执行函数指针(bool(SARibbonCategory*))，函数指针返回false则停止迭代
-
-	bool iterateCategory(FpCategoryIterate fp) const;
-	// 此函数会遍历SARibbonBar下的所有Category,并迭代所有的pannel，执行函数指针(bool(SARibbonPannel*))，函数指针返回false则停止迭代
-	bool iteratePannel(FpPannelIterate fp) const;
-
-	// 设置边角widget可见性，对于mdi窗口，会出现TopLeftCorner和TopRightCorner两个corner widget
-	void setCornerWidgetVisible(bool on, Qt::Corner c = Qt::TopLeftCorner);
-
-	// 获取所有pannel下的action
-	QList< QAction* > allActions() const;
+    /// Get active right button group
+    SARibbonButtonGroupWidget* activeRightButtonGroup();
+
+    /// Get right button group
+    SARibbonButtonGroupWidget* rightButtonGroup();
+
+    /// Get active quick access bar
+    SARibbonQuickAccessBar* activeQuickAccessBar();
+
+    /// Get quick access bar
+    SARibbonQuickAccessBar* quickAccessBar();
+
+    /// Get title icon widget
+    SARibbonTitleIconWidget* titleIconWidget() const;
+
+    /// Set title icon visibility
+    void setTitleIconVisible(bool on = true);
+    /// Check if title icon is visible
+    bool isTitleIconVisible() const;
+
+    /// Set ribbon style
+    void setRibbonStyle(RibbonStyles v);
+    /// Get current ribbon style
+    RibbonStyles currentRibbonStyle() const;
+
+    /// Set current ribbon index
+    void setCurrentIndex(int index);
+
+    /// Get current tab index
+    int currentIndex();
+
+    /// Raise category to show it
+    void raiseCategory(SARibbonCategory* category);
+
+    /// Check if current style is two-row
+    bool isTwoRowStyle() const;
+    /// Check if current style is three-row
+    bool isThreeRowStyle() const;
+
+    /// Check if current style is loose
+    bool isLooseStyle() const;
+    /// Check if current style is compact
+    bool isCompactStyle() const;
+    /// Check if current style is single-row
+    bool isSingleRowStyle() const;
+
+    /// Update ribbon geometry
+    void updateRibbonGeometry();
+
+    /// Get panel layout mode
+    SARibbonPanel::PanelLayoutMode panelLayoutMode() const;
+    /// Set panel layout mode
+    void setPanelLayoutMode(SARibbonPanel::PanelLayoutMode m);
+
+    /// Set tab on title
+    void setTabOnTitle(bool on);
+    /// Check if tab is on title
+    bool isTabOnTitle() const;
+
+    /// Set tab bar baseline color
+    void setTabBarBaseLineColor(const QColor& clr);
+    /// Get tab bar baseline color
+    QColor tabBarBaseLineColor() const;
+
+    /// Set window title text color
+    void setWindowTitleTextColor(const QColor& clr);
+    /// Get window title text color
+    QColor windowTitleTextColor() const;
+
+    /// Set title visibility
+    void setTitleVisible(bool on = false);
+    /// Check if title is visible
+    bool isTitleVisible() const;
+
+    /// Set window title background brush
+    void setWindowTitleBackgroundBrush(const QBrush& bk);
+    /// Get window title background brush
+    QBrush windowTitleBackgroundBrush() const;
+
+    /// Set window title alignment
+    void setWindowTitleAlignment(Qt::Alignment al);
+    /// Get window title alignment
+    Qt::Alignment windowTitleAlignment() const;
+
+    /// Set enable word wrap
+    void setEnableWordWrap(bool on);
+    /// Check if word wrap is enabled
+    bool isEnableWordWrap() const;
+
+    /// Set whether button text is displayed to the right of the icon
+    void setEnableIconRightText(bool on);
+    /// Check if icon-right-text mode is enabled
+    bool isEnableIconRightText() const;
+
+    /// Set button maximum aspect ratio
+    void setButtonMaximumAspectRatio(qreal fac = 1.4);
+    /// Get button maximum aspect ratio
+    qreal buttonMaximumAspectRatio() const;
+
+    /// Set panel title height
+    void setPanelTitleHeight(int h);
+    /// Get panel title height
+    int panelTitleHeight() const;
+
+    /// Set enable show panel title
+    void setEnableShowPanelTitle(bool on);
+    /// Check if panel title is shown
+    bool isEnableShowPanelTitle() const;
+
+    /// Set panel spacing
+    void setPanelSpacing(int n);
+    /// Get panel spacing
+    int panelSpacing() const;
+
+    /// Set panel tool button icon sizes
+    void setPanelToolButtonIconSize(const QSize& smallSize, const QSize& largeSize);
+    /// Get panel tool button icon sizes
+    QPair< QSize, QSize > panelToolButtonIconSize() const;
+
+    /// Set panel large icon size
+    void setPanelLargeIconSize(const QSize& largeSize);
+    /// Get panel large icon size
+    QSize panelLargeIconSize() const;
+
+    /// Set panel small icon size
+    void setPanelSmallIconSize(const QSize& smallSize);
+    /// Get panel small icon size
+    QSize panelSmallIconSize() const;
+
+    /// Set whether the tabbar is vertically centered in compact style (used by themes such as ModernBlue)
+    void setCompactTabBarCentered(bool centered);
+    /// Check whether the tabbar is vertically centered in compact style
+    bool isCompactTabBarCentered() const;
+    /// Set the top gap of the stacked widget in compact centered style (used by themes such as ModernBlue)
+    void setStackedTopGap(int gap);
+    /// Get the top gap of the stacked widget
+    int stackedTopGap() const;
+
+    /// Get ribbon stacked widget
+    SARibbonStackedWidget* ribbonStackedWidget();
+
+    /// Set context category color list
+    void setContextCategoryColorList(const QList< QColor >& cls);
+    /// Get context category color list
+    QList< QColor > contextCategoryColorList() const;
+
+    /// Set context category title text color
+    void setContextCategoryTitleTextColor(const QColor& clr);
+    /// Get context category title text color
+    QColor contextCategoryTitleTextColor() const;
+
+    /// Set context category color highlight function
+    void setContextCategoryColorHighLight(FpContextCategoryHighlight fp);
+
+    /// Set ribbon alignment
+    void setRibbonAlignment(SARibbonAlignment al);
+    /// Get ribbon alignment
+    SARibbonAlignment ribbonAlignment() const;
+
+    /// Set the horizontal alignment of panels in categories
+    void setPanelAlignment(SARibbonAlignment al);
+    /// Get the horizontal alignment of panels
+    SARibbonAlignment panelAlignment() const;
+
+    /// Iterate through all categories
+    bool iterateCategory(FpCategoryIterate fp) const;
+    /// Iterate through all panels
+    bool iteratePanel(FpPanelIterate fp) const;
+
+    /// Set corner widget visibility
+    void setCornerWidgetVisible(bool on, Qt::Corner c = Qt::TopLeftCorner);
+
+    /// Set application button vertical expansion
+    void setApplicationButtonVerticalExpansion(bool on = true);
+    /// Check if application button is vertically expanded
+    bool isApplicationButtonVerticalExpansion() const;
+
+    /// Get all actions in panels
+    QList< QAction* > allActions() const;
+    /// Check if ribbon frame is used
+    bool isUseRibbonFrame() const;
 Q_SIGNALS:
 
-	/**
-	 @brief 应用按钮点击响应 - 左上角的按钮，通过关联此信号触发应用按钮点击的效果
+    /**
+     * \if ENGLISH
+     * @brief Application button click response - the button in the top-left corner, connect to this signal to trigger application button click effect
+     *
+     * For example, clicking the button can pop up a full-screen window (like in Office)
+     * \endif
+     *
+     * \if CHINESE
+     * @brief 应用按钮点击响应 - 左上角的按钮，通过关联此信号触发应用按钮点击的效果
+     *
+     * 例如想点击按钮后弹出一个全屏的窗口（如office这些）
+     * \endif
+     */
+    void applicationButtonClicked();
 
-	 例如想点击按钮后弹出一个全屏的窗口（如office这些）
-	 */
-	void applicationButtonClicked();
+    /**
+     * \if ENGLISH
+     * @brief Signal triggered when tab page changes
+     * @param index New tab index
+     * \endif
+     *
+     * \if CHINESE
+     * @brief 标签页变化触发的信号
+     * @param index 新的标签页索引
+     * \endif
+     */
+    void currentRibbonTabChanged(int index);
 
-	/**
-	 @brief 标签页变化触发的信号
-	 @param index
-	 */
-	void currentRibbonTabChanged(int index);
+    /**
+     * \if ENGLISH
+     * @brief Signal triggered when ribbon state changes
+     * @param nowState New ribbon state after change
+     * \endif
+     *
+     * \if CHINESE
+     * @brief ribbon的状态发生了变化后触发此信号
+     * @param nowState 变更之后的ribbon状态
+     * \endif
+     */
+    void ribbonModeChanged(SARibbonBar::RibbonMode nowState);
 
-	/**
-	 @brief ribbon的状态发生了变化后触发此信号
-	 @param nowState 变更之后的ribbon状态
-	 */
-	void ribbonModeChanged(SARibbonBar::RibbonMode nowState);
+    /**
+     * \if ENGLISH
+     * @brief Signal triggered when ribbon style changes
+     * @param nowStyle New ribbon style after change
+     * \endif
+     *
+     * \if CHINESE
+     * @brief ribbon的状态发生了变化后触发此信号
+     * @param nowStyle 变更之后的ribbon样式
+     * \endif
+     */
+    void ribbonStyleChanged(SARibbonBar::RibbonStyles nowStyle);
 
-	/**
-	 @brief ribbon的状态发生了变化后触发此信号
-	 @param nowStyle 变更之后的ribbon样式
-	 */
-	void ribbonStyleChanged(SARibbonBar::RibbonStyles nowStyle);
+    /**
+     * \if ENGLISH
+     * @brief Signal triggered when title bar height changes
+     * @param oldHeight Old title bar height
+     * @param newHeight New title bar height
+     * \endif
+     *
+     * \if CHINESE
+     * @brief 标题栏高度发生了变化的信号
+     * @param oldHeight 旧的标题栏高度
+     * @param newHeight 新的标题栏高度
+     * \endif
+     */
+    void titleBarHeightChanged(int oldHeight, int newHeight);
 
-	/**
-	   @brief 标题栏高度发生了变化的信号
-	   @param oldHeight
-	   @param newHeight
-	 */
-	void titleBarHeightChanged(int oldHeight, int newHeight);
-
-	/**
-	 * @brief 参考QToolBar::actionTriggered的信号
-	 * @param action
-	 */
-	void actionTriggered(QAction* action);
+    /**
+     * \if ENGLISH
+     * @brief Signal similar to QToolBar::actionTriggered
+     * @param action Triggered action
+     * \endif
+     *
+     * \if CHINESE
+     * @brief 参考QToolBar::actionTriggered的信号
+     * @param action 触发的action
+     * \endif
+     */
+    void actionTriggered(QAction* action);
 
 protected:
-	bool eventFilter(QObject* obj, QEvent* e) override;
-	// 根据情况重置tabbar的宽度，主要针对wps模式
-	int calcMinTabBarWidth() const;
-	// 更新
-	void updateCategoryTitleToTabName();
-	// 告知WindowButtonGroup的尺寸
-	void setSystemButtonGroupSize(const QSize& s);
-	// 更新标题位置rect
-	void updateTitleRect();
-	// 设置当前的MainWindow的样式，这个函数是SARibbonMainWindow调用，告知ribbonbar当前MainWindow的样式
-	void setMainWindowStyles(SARibbonMainWindowStyles s);
+    /// Event filter
+    bool eventFilter(QObject* obj, QEvent* e) override;
+    /// Calculate minimum tab bar width
+    int calcMinTabBarWidth() const;
+    /// Update category title to tab name
+    void updateCategoryTitleToTabName();
+    /// Set system button group size
+    void setSystemButtonGroupSize(const QSize& s);
+    /// Set main window styles
+    void setMainWindowStyles(SARibbonMainWindowStyles s);
 protected Q_SLOTS:
-	void onWindowTitleChanged(const QString& title);
-	void onWindowIconChanged(const QIcon& i);
-	void onCategoryWindowTitleChanged(const QString& title);
-	void onStackWidgetHided();
-	virtual void onCurrentRibbonTabChanged(int index);
-	virtual void onCurrentRibbonTabClicked(int index);
-	virtual void onCurrentRibbonTabDoubleClicked(int index);
-	void onContextsCategoryPageAdded(SARibbonCategory* category);
-	void onContextsCategoryCategoryNameChanged(SARibbonCategory* category, const QString& title);
-	void onTabMoved(int from, int to);
+    /// Slot for window title changed
+    void onWindowTitleChanged(const QString& title);
+    /// Slot for window icon changed
+    void onWindowIconChanged(const QIcon& i);
+    /// Slot for category window title changed
+    void onCategoryWindowTitleChanged(const QString& title);
+    /// Slot for stack widget hided
+    void onStackWidgetHided();
+    /// Slot for current ribbon tab changed
+    virtual void onCurrentRibbonTabChanged(int index);
+    /// Slot for current ribbon tab clicked
+    virtual void onCurrentRibbonTabClicked(int index);
+    /// Slot for current ribbon tab double clicked
+    virtual void onCurrentRibbonTabDoubleClicked(int index);
+    /// Slot for contexts category page added
+    void onContextsCategoryPageAdded(SARibbonCategory* category);
+    /// Slot for contexts category name changed
+    void onContextsCategoryCategoryNameChanged(SARibbonCategory* category, const QString& title);
+    /// Slot for tab moved
+    void onTabMoved(int from, int to);
 
 private:
-	int tabIndex(SARibbonCategory* obj);
-	void resizeAll();
-	void resizeInLooseStyle();
-	void resizeInCompactStyle();
-	void paintInLooseStyle();
-	void paintInCompactStyle();
-	void resizeStackedContainerWidget();
+    int tabIndex(SARibbonCategory* obj);
+    void paintInLooseStyle();
+    void paintInCompactStyle();
 
-	// 刷新所有ContextCategoryManagerData，这个在单独一个Category删除时调用
-	void updateContextCategoryManagerData();
-	void synchronousCategoryData(bool autoUpdate = true);
-	// 把窗口标题文字转换为显示的文字，这里主要针对[*]占位符进行替换
-	QString toDisplayTitleText(const QString& title) const;
+    // 刷新所有ContextCategoryManagerData，这个在单独一个Category删除时调用
+    void updateContextCategoryManagerData();
+    void synchronousCategoryData(bool autoUpdate = true);
+    // 把窗口标题文字转换为显示的文字，这里主要针对[*]占位符进行替换
+    QString toDisplayTitleText(const QString& title) const;
+    // 获取标题显示的区域
+    QRect getWindowTitleRect() const;
 
 protected:
-	void setRibbonMainwindowStyle();
-	virtual void paintEvent(QPaintEvent* e) override;
-	virtual void resizeEvent(QResizeEvent* e) override;
-	virtual void moveEvent(QMoveEvent* e) override;
-	virtual void changeEvent(QEvent* e) override;
-	virtual bool event(QEvent* e) override;
-	virtual void paintTabbarBaseLine(QPainter& painter);
-	virtual void paintWindowTitle(QPainter& painter, const QString& title, const QRect& titleRegion);
-	virtual void
-	paintContextCategoryTab(QPainter& painter, const QString& title, const QRect& contextRect, const QColor& color);
+    /// Set ribbon main window style
+    void setRibbonMainwindowStyle();
+    /// Paint event handler
+    virtual void paintEvent(QPaintEvent* e) override;
+    /// Move event handler
+    virtual void moveEvent(QMoveEvent* e) override;
+    /// Change event handler
+    virtual void changeEvent(QEvent* e) override;
+
+    /// Paint tab bar baseline
+    virtual void paintTabbarBaseLine(QPainter& painter);
+    /// Paint window title
+    virtual void paintWindowTitle(QPainter& painter, const QString& title, const QRect& titleRegion);
+    /// Paint context category tab
+    virtual void
+    paintContextCategoryTab(QPainter& painter, const QString& title, const QRect& contextRect, const QColor& color);
 #if SA_DEBUG_PRINT_SARIBBONBAR
-	SA_RIBBON_EXPORT friend QDebug operator<<(QDebug debug, const SARibbonBar& ribbon);
+    SA_RIBBON_EXPORT friend QDebug operator<<(QDebug debug, const SARibbonBar& ribbon);
 #endif
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(SARibbonBar::RibbonStyles)
 
-namespace SA
-{
-/**
- * @brief makeColorVibrant 让颜色鲜艳
- * @param c 原来的颜色
- * @param saturationDelta 增加饱和度（上限255）
- * @param valueDelta 增加明度（上限255）
- * @return
- */
-QColor SA_RIBBON_EXPORT makeColorVibrant(const QColor& c, int saturationDelta = 150, int valueDelta = 30);
-}
 #endif  // SARIBBONBAR_H

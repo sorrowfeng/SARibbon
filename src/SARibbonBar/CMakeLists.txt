@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 project(SARibbonBar LANGUAGES CXX VERSION ${SARIBBON_VERSION})
 set(SARIBBON_LIB_NAME SARibbonBar)
 message(STATUS "SARIBBON_LIB_NAME=${SARIBBON_LIB_NAME}")
@@ -33,8 +33,11 @@ SET(SACOLOR_SOURCE_FILES
 SET(SARIBBON_HEADER_FILES
     SARibbonBarVersionInfo.h
     SARibbonGlobal.h
+    SARibbonQt5Compat.hpp
+    SARibbonUtil.h
     SAFramelessHelper.h
     SARibbonActionsManager.h
+    SARibbonBarLayout.h
     SARibbonBar.h
     SARibbonCustomizeData.h
     SARibbonCustomizeDialog.h
@@ -44,39 +47,41 @@ SET(SARIBBON_HEADER_FILES
     SARibbonSystemButtonBar.h
     SARibbonApplicationButton.h
     SARibbonTabBar.h
+    SARibbonThemeManager.h
+    SARibbonThemePalette.h
     SARibbonCategory.h
     SARibbonContextCategory.h
-    SARibbonPannel.h
+    SARibbonPanel.h
+    SARibbonPanelLayout.h
+    SARibbonPanelItem.h
+    SARibbonPanelOptionButton.h
     SARibbonToolButton.h
+    SARibbonButtonLayoutStrategy.h
     SARibbonMenu.h
-    SARibbonPannelOptionButton.h
     SARibbonSeparatorWidget.h
     SARibbonCategoryLayout.h
     SARibbonGallery.h
-    SARibbonControlButton.h
     SARibbonGalleryGroup.h
     SARibbonGalleryItem.h
-    SARibbonComboBox.h
     SARibbonElementFactory.h
     SARibbonElementManager.h
-    SARibbonLineEdit.h
-    SARibbonCheckBox.h
     SARibbonButtonGroupWidget.h
     SARibbonStackedWidget.h
     SARibbonQuickAccessBar.h
     SARibbonCtrlContainer.h
-    SARibbonPannelLayout.h
-    SARibbonPannelItem.h
     SARibbonLineWidgetContainer.h
     SARibbonColorToolButton.h
     SARibbonApplicationWidget.h
+    SARibbonTitleIconWidget.h
 )
 
 # source files
 # cn:cpp文件
 SET(SARIBBON_SOURCE_FILES
+    SARibbonUtil.cpp
     SAFramelessHelper.cpp
     SARibbonActionsManager.cpp
+    SARibbonBarLayout.cpp
     SARibbonBar.cpp
     SARibbonCustomizeData.cpp
     SARibbonCustomizeDialog.cpp
@@ -86,32 +91,32 @@ SET(SARIBBON_SOURCE_FILES
     SARibbonSystemButtonBar.cpp
     SARibbonApplicationButton.cpp
     SARibbonTabBar.cpp
+    SARibbonThemeManager.cpp
+    SARibbonThemePalette.cpp
     SARibbonCategory.cpp
     SARibbonContextCategory.cpp
-    SARibbonPannel.cpp
+    SARibbonPanel.cpp
+    SARibbonPanelLayout.cpp
+    SARibbonPanelItem.cpp
+    SARibbonPanelOptionButton.cpp
     SARibbonToolButton.cpp
+    SARibbonButtonLayoutStrategy.cpp
     SARibbonMenu.cpp
-    SARibbonPannelOptionButton.cpp
     SARibbonSeparatorWidget.cpp
     SARibbonCategoryLayout.cpp
     SARibbonGallery.cpp
-    SARibbonControlButton.cpp
     SARibbonGalleryGroup.cpp
     SARibbonGalleryItem.cpp
-    SARibbonComboBox.cpp
     SARibbonElementFactory.cpp
     SARibbonElementManager.cpp
-    SARibbonLineEdit.cpp
-    SARibbonCheckBox.cpp
     SARibbonButtonGroupWidget.cpp
     SARibbonStackedWidget.cpp
     SARibbonQuickAccessBar.cpp
     SARibbonCtrlContainer.cpp
-    SARibbonPannelLayout.cpp
-    SARibbonPannelItem.cpp
     SARibbonLineWidgetContainer.cpp
     SARibbonColorToolButton.cpp
     SARibbonApplicationWidget.cpp
+    SARibbonTitleIconWidget.cpp
 )
 
 # resource files
@@ -123,13 +128,22 @@ SET(SARIBBON_RESOURCE_FILES
 message(STATUS "SARibbon resource file:${SARIBBON_RESOURCE_FILES}")
 ################################################################
 
-add_library(${SARIBBON_LIB_NAME} SHARED
+# 根据 SARIBBON_BUILD_STATIC_LIBS 决定库类型
+if(SARIBBON_BUILD_STATIC_LIBS)
+    set(SARIBBON_LIB_TYPE STATIC)
+else()
+    set(SARIBBON_LIB_TYPE SHARED)
+endif()
+
+add_library(${SARIBBON_LIB_NAME} ${SARIBBON_LIB_TYPE}
     ${SARIBBON_HEADER_FILES}
     ${SARIBBON_SOURCE_FILES}
-    ${SARIBBON_RESOURCE_FILES}
     ${SACOLOR_HEADER_FILES}
     ${SACOLOR_SOURCE_FILES}
+    ${SARIBBON_RESOURCE_FILES}
+    SARibbonQt5Compat.hpp
 )
+message(STATUS "SARibbon SARIBBON_GENERATED_RESOURCES resource file:${SARIBBON_GENERATED_RESOURCES}")
 add_library(${SARIBBON_LIB_NAME}::${SARIBBON_LIB_NAME} ALIAS ${SARIBBON_LIB_NAME})
 #################################################
 # Qt相关的依赖
@@ -139,8 +153,9 @@ add_library(${SARIBBON_LIB_NAME}::${SARIBBON_LIB_NAME} ALIAS ${SARIBBON_LIB_NAME
 target_link_libraries(${SARIBBON_LIB_NAME} PUBLIC
                       Qt${QT_VERSION_MAJOR}::Core
                       Qt${QT_VERSION_MAJOR}::Gui
-                      Qt${QT_VERSION_MAJOR}::Widgets)
-message(STATUS "link ${SARIBBON_LIB_NAME} PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets")
+                      Qt${QT_VERSION_MAJOR}::Widgets
+                      Qt${QT_VERSION_MAJOR}::Svg)
+message(STATUS "link ${SARIBBON_LIB_NAME} PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Svg")
 
 #################################################
 # frameless相关的依赖
@@ -172,12 +187,25 @@ set_target_properties(${SARIBBON_LIB_NAME} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
 )
-# 构建库定义的宏,此宏必须为PRIVATE
-target_compile_definitions(${SARIBBON_LIB_NAME} PRIVATE SA_RIBBON_BAR_MAKE_LIB)
-message(STATUS "macros predefined:#define SA_RIBBON_BAR_MAKE_LIB")
-# 使用SAColorWidgets但不作为库使用定义的宏,此宏必须为PRIVATE
-target_compile_definitions(${SARIBBON_LIB_NAME} PRIVATE SA_COLOR_WIDGETS_MAKE_LIB)
-message(STATUS "macros predefined:#define SA_COLOR_WIDGETS_MAKE_LIB")
+
+# 构建库定义的宏
+if (SARIBBON_BUILD_STATIC_LIBS)
+    target_compile_definitions(${SARIBBON_LIB_NAME} PRIVATE SA_RIBBON_BAR_NO_EXPORT)
+    target_compile_definitions(${SARIBBON_LIB_NAME} INTERFACE SA_RIBBON_BAR_NO_EXPORT)
+    target_compile_definitions(${SARIBBON_LIB_NAME} PRIVATE SA_COLOR_WIDGETS_NO_DLL)
+    target_compile_definitions(${SARIBBON_LIB_NAME} INTERFACE SA_COLOR_WIDGETS_NO_DLL)
+    message(STATUS "macros predefined:#define SA_RIBBON_BAR_NO_EXPORT")
+        message(STATUS "macros predefined:#define SA_COLOR_WIDGETS_NO_DLL")
+else()
+    target_compile_definitions(${SARIBBON_LIB_NAME} PRIVATE SA_RIBBON_BAR_MAKE_LIB)
+    message(STATUS "macros predefined:#define SA_RIBBON_BAR_MAKE_LIB")
+    # SAColorWidgets但不作为库使用定义的宏,此宏必须为PRIVATE
+    target_compile_definitions(${SARIBBON_LIB_NAME} PRIVATE SA_COLOR_WIDGETS_MAKE_LIB)
+    message(STATUS "macros predefined:#define SA_COLOR_WIDGETS_MAKE_LIB")
+endif()
+
+
+
 if(_SARIBBON_USE_FRAMELESS_LIB)
     #使用frameless必须设置SARIBBON_USE_3RDPARTY_FRAMELESSHELPER宏为1,此宏必须为PUBLIC
     target_compile_definitions(${SARIBBON_LIB_NAME} PUBLIC SARIBBON_USE_3RDPARTY_FRAMELESSHELPER=1)
@@ -217,6 +245,47 @@ if(MSVC)
     message(STATUS "macros predefined:#define NOMINMAX")
 endif()
 
+##################################
+# 翻译
+##################################
+option(SARIBBON_UPDATE_TRANSLATIONS "Run lupdate to update .ts source files (modifies .ts files)" OFF)
+find_package(Qt${QT_VERSION_MAJOR}LinguistTools QUIET)
+    if(Qt${QT_VERSION_MAJOR}LinguistTools_FOUND)
+    # 2. 准备 ts 文件列表（可以写多个语言）
+    set(TS_FILES
+        i18n/SARibbon_zh_CN.ts
+        i18n/SARibbon_en_US.ts
+    )
+
+    set(TS_SOURCES
+        ${SARIBBON_HEADER_FILES}
+        ${SARIBBON_SOURCE_FILES}
+        ${SACOLOR_HEADER_FILES}
+        ${SACOLOR_SOURCE_FILES}
+    )
+    # 3. 生成/更新 ts 文件 + 编译出 qm 文件
+    #    这一步会在 build 目录里生成 myapp_zh_CN.qm 等
+    # 4. 根据 Qt 版本调对应宏
+    if(SARIBBON_UPDATE_TRANSLATIONS)
+        # lupdate + lrelease: updates .ts files with new strings from source
+        if(QT_VERSION_MAJOR EQUAL 5)
+            qt5_create_translation(QM_FILES ${TS_SOURCES} ${TS_FILES})
+        elseif(QT_VERSION_MAJOR EQUAL 6)
+            qt6_create_translation(QM_FILES ${TS_SOURCES} ${TS_FILES})
+        endif()
+    else()
+        # lrelease only: compiles existing .ts -> .qm without modifying .ts
+        if(QT_VERSION_MAJOR EQUAL 5)
+            qt5_add_translation(QM_FILES ${TS_FILES})
+        elseif(QT_VERSION_MAJOR EQUAL 6)
+            qt6_add_translation(QM_FILES ${TS_FILES})
+        endif()
+    endif()
+    # 5. 把生成的 qm 挂到目标上
+    target_sources(${SARIBBON_LIB_NAME} PRIVATE ${QM_FILES})
+
+    message(STATUS "Translation support enabled (LinguistTools found).")
+endif()
 # ------------------------------- install script -------------------------------
 
 if(SARIBBON_ENABLE_INSTALL)
@@ -238,14 +307,11 @@ install(FILES
 set(SARIBBON_AMALGAMATE_FILES 
     ${CMAKE_CURRENT_SOURCE_DIR}/../SARibbon.h 
     ${CMAKE_CURRENT_SOURCE_DIR}/../SARibbon.cpp 
-    ${CMAKE_CURRENT_SOURCE_DIR}/../SARibbon.pri
 )
 
-install(FILES
-    ${SARIBBON_AMALGAMATE_FILES}
-    DESTINATION ${SARIBBON_LIB_NAME}_amalgamate
+install(FILES ${SARIBBON_AMALGAMATE_FILES}
+     DESTINATION share/${SARIBBON_LIB_NAME}_amalgamate
 )
-
 
 
 include(CMakePackageConfigHelpers)
@@ -291,8 +357,8 @@ endif()
 
 if(WIN32)
 	create_win32_resource_version(
-                TARGET ${SARIBBON_LIB_NAME}
-                FILENAME ${SARIBBON_LIB_NAME}
+        TARGET ${SARIBBON_LIB_NAME}
+        FILENAME ${SARIBBON_LIB_NAME}
 		EXT "dll"
 		DESCRIPTION "Ribbon control library for Qt"
 	)

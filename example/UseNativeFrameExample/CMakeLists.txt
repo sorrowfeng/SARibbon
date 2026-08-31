@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 SET(VERSION_SHORT 0.1)
 project(UseNativeFrameExample VERSION ${VERSION_SHORT})
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -6,12 +6,12 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 # qt库加载，最低要求5.8
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Core REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} 5.8 COMPONENTS Core Gui Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} 5.12 COMPONENTS Core Gui Widgets REQUIRED)
 add_executable(UseNativeFrameExample
     mainwindow.h
     mainwindow.cpp
     main.cpp
-    saribbonresouce.qrc
+    resouce.qrc
 )
 if(WIN32)
     set_target_properties(UseNativeFrameExample PROPERTIES
@@ -23,12 +23,12 @@ if(NOT TARGET SARibbonBar)
     message(STATUS "NOT TARGET SARibbonBar find_package(SARibbonBar REQUIRED)")
     find_package(SARibbonBar REQUIRED)
 endif()
-target_link_libraries(UseNativeFrameExample PUBLIC SARibbonBar::SARibbonBar)
-target_link_libraries(UseNativeFrameExample PUBLIC
-                                       Qt${QT_VERSION_MAJOR}::Core 
-                                       Qt${QT_VERSION_MAJOR}::Gui 
+target_link_libraries(UseNativeFrameExample PRIVATE SARibbonBar::SARibbonBar)
+target_link_libraries(UseNativeFrameExample PRIVATE
+                                       Qt${QT_VERSION_MAJOR}::Core
+                                       Qt${QT_VERSION_MAJOR}::Gui
                                        Qt${QT_VERSION_MAJOR}::Widgets)
-                                           
+
 set_target_properties(UseNativeFrameExample PROPERTIES
     AUTOMOC ON
     AUTORCC ON
@@ -42,8 +42,13 @@ set_target_properties(UseNativeFrameExample PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
+include(GNUInstallDirs)
 install(TARGETS UseNativeFrameExample
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION bin
-    ARCHIVE DESTINATION lib
+    BUNDLE DESTINATION .
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt_finalize_executable(UseNativeFrameExample)
+endif()

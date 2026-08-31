@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 project(SARibbonExamples LANGUAGES CXX)
 
 add_subdirectory(MainWindowExample)
@@ -7,4 +7,7 @@ add_subdirectory(WidgetWithRibbon)
 add_subdirectory(ModernBlueStyleExample)
 add_subdirectory(NormalMenuBarExample)
 add_subdirectory(MdiAreaWindowExample)
+add_subdirectory(MatlabUI)
+add_subdirectory(uiform)
 add_subdirectory(StaticExample)
+add_subdirectory(ThemeDesignerExample)

@@ -1,4 +1,4 @@
-﻿/* SARibbonApplicationWidget */
+/* SARibbonApplicationWidget */
 SARibbonApplicationWidget {
     background-color: #141414; /* {Ribbon.BKColor} - Fluent Neutral Background 1 */
     border: solid #141414;
@@ -40,8 +40,8 @@ SARibbonCategory > SARibbonSeparatorWidget {
     margin-bottom: 3px;
 }
 
-/* SARibbonPannel */
-SARibbonPannel {
+/* SARibbonPanel */
+SARibbonPanel {
     background-color: #1f1f1f;
     border: none;
     color: #d6d6d6; /* {Neutral Foreground 2} */
@@ -51,22 +51,22 @@ SARibbonPannel {
 SARibbonButtonGroupWidget {
     background-color: transparent;
 }
-SARibbonPannel > SARibbonButtonGroupWidget {
+SARibbonPanel > SARibbonButtonGroupWidget {
     border: 1px solid #6b6b6b; /* {PannelButtonGroup.BorderColor} */
 }
 
-/* SARibbonPannelLabel */
-SARibbonPannelLabel {
+/* SARibbonPanelLabel */
+SARibbonPanelLabel {
     background-color: transparent;
     color: #d6d6d6;
 }
 
-/* SARibbonPannelOptionButton */
-SARibbonPannelOptionButton {
+/* SARibbonPanelOptionButton */
+SARibbonPanelOptionButton {
     background-color: transparent;
     color: #fafafa;
 }
-SARibbonPannelOptionButton:hover {
+SARibbonPanelOptionButton:hover {
     background-color: #2e2e2e;
     border: 0px;
 }

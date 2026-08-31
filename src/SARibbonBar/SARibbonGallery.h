@@ -1,16 +1,25 @@
-﻿#ifndef SARIBBONGALLERY_H
+#ifndef SARIBBONGALLERY_H
 #define SARIBBONGALLERY_H
 #include "SARibbonGlobal.h"
 #include <QFrame>
 #include <QToolButton>
+#include <QScrollArea>
 #include "SARibbonGalleryGroup.h"
-#include <QSizeGrip>
 class QLabel;
 class QVBoxLayout;
+class QSizeGrip;
+class QShowEvent;
+class QHideEvent;
 class SARibbonGalleryViewport;
 
 /**
+ * \if ENGLISH
+ * @brief Button for SARibbonGallery control
+ * \endif
+ *
+ * \if CHINESE
  * @brief 针对SARibbonGallery控件的按钮
+ * \endif
  */
 class SA_RIBBON_EXPORT SARibbonGalleryButton : public QToolButton
 {
@@ -21,6 +30,31 @@ public:
 };
 
 /**
+ * \if ENGLISH
+ * @brief Gallery control widget
+ *
+ * The Gallery control consists of a currently active @sa SARibbonGalleryGroup and a popup @sa SARibbonGalleryViewport.
+ *
+ * @sa SARibbonGalleryGroup inherits from @sa QListView and displays actions through icons.
+ *     Related properties can be set according to QListView.
+ *
+ * @sa SARibbonGalleryViewport is a window with an internal vertical layout that displays
+ *     all managed SARibbonGalleryGroups when popped up.
+ *
+ * Example usage:
+ * @code
+ * SARibbonGallery* gallery = panel1->addGallery();
+ * QList< QAction* > galleryActions;
+ * ...create many actions ...
+ * SARibbonGalleryGroup* group1 = gallery->addCategoryActions(tr("Files"), galleryActions);
+ * galleryActions.clear();
+ * ...create many actions ...
+ * gallery->addCategoryActions(tr("Apps"), galleryActions);
+ * gallery->setCurrentViewGroup(group1);
+ * @endcode
+ * \endif
+ *
+ * \if CHINESE
  * @brief Gallery控件
  *
  * Gallery控件是由一个当前激活的@sa SARibbonGalleryGroup 和弹出的 @sa SARibbonGalleryViewport 组成
@@ -31,7 +65,7 @@ public:
  *
  * 示例如下：
  * @code
- * SARibbonGallery* gallery = pannel1->addGallery();
+ * SARibbonGallery* gallery = panel1->addGallery();
  * QList< QAction* > galleryActions;
  * ...create many actions ...
  * SARibbonGalleryGroup* group1 = gallery->addCategoryActions(tr("Files"), galleryActions);
@@ -40,72 +74,104 @@ public:
  * gallery->addCategoryActions(tr("Apps"), galleryActions);
  * gallery->setCurrentViewGroup(group1);
  * @endcode
+ * \endif
  */
 class SA_RIBBON_EXPORT SARibbonGallery : public QFrame
 {
     Q_OBJECT
     SA_RIBBON_DECLARE_PRIVATE(SARibbonGallery)
 public:
+    /// Constructor for SARibbonGallery
     explicit SARibbonGallery(QWidget* parent = nullptr);
+    /// Destructor for SARibbonGallery
     virtual ~SARibbonGallery();
-    virtual QSize sizeHint() const override;
-    // 添加一个GalleryGroup
+    /// Get a blank SARibbonGalleryGroup
     SARibbonGalleryGroup* addGalleryGroup();
-    // 添加一个GalleryGroup
+    /// Add an existing SARibbonGalleryGroup to the gallery
     void addGalleryGroup(SARibbonGalleryGroup* group);
-    // 快速添加一组actions
+    /// Quickly add a set of actions as a gallery group
     SARibbonGalleryGroup* addCategoryActions(const QString& title, QList< QAction* > actions);
-    // 设置当前显示的SARibbonGalleryGroup
+    /// Set the currently displayed gallery group
     void setCurrentViewGroup(SARibbonGalleryGroup* group);
-    // 获取当前显示的SARibbonGalleryGroup
+    /// Get the currently displayed gallery group
     SARibbonGalleryGroup* currentViewGroup() const;
-    // 获取弹出窗口指针
+    /// Get the popup viewport widget
     SARibbonGalleryViewport* getPopupViewPort() const;
 
 public:
-    // 设置最右边三个控制按钮的最大宽度（默认15）
+    /// Set the maximum width for gallery control buttons (default 15)
     static void setGalleryButtonMaximumWidth(int w);
+    /// Set single-row display mode for gallery
+    void setSingleRowMode(bool on);
+    /// Check if gallery is in single-row mode
+    bool isSingleRowMode() const;
 Q_SIGNALS:
     /**
-     * @brief 转发管理的SARibbonGalleryGroup::triggered
-     * 所有加入SARibbonGallery的action都会被一个QActionGroup管理,可以通过@sa getActionGroup 获取到对应的actiongroup
-     * @param action
+     * \if ENGLISH
+     * @brief Forwards SARibbonGalleryGroup::triggered signal
+     * All actions added to SARibbonGallery are managed by a QActionGroup
+     * @param action Triggered action
+     * \endif
+     *
+     * \if CHINESE
+     * @brief 转发管理的SARibbonGalleryGroup::triggered信号
+     * 所有加入SARibbonGallery的action都会被一个QActionGroup管理
+     * @param action 被触发的动作
+     * \endif
      */
     void triggered(QAction* action);
     /**
-     * @brief 转发管理的SARibbonGalleryGroup::hovered
+     * \if ENGLISH
+     * @brief Forwards SARibbonGalleryGroup::hovered signal
+     * @note This requires SARibbonGalleryGroup::setMouseTracking(true)
+     * @param action Hovered action
+     * \endif
+     *
+     * \if CHINESE
+     * @brief 转发管理的SARibbonGalleryGroup::hovered信号
      * @note 此属性需要确保SARibbonGalleryGroup::setMouseTracking(true)
-     * @param action
+     * @param action 悬停的动作
+     * \endif
      */
     void hovered(QAction* action);
 
 public Q_SLOTS:
-    // 上翻页
+    /// Scroll up one page in the current gallery group
     virtual void pageUp();
-    // 下翻页
+    /// Scroll down one page in the current gallery group
     virtual void pageDown();
-    // 显示更多触发，默认弹出内部管理的SARibbonGalleryViewport，用户可重载此函数实现自定义的弹出
+    /// Show the popup viewport with all gallery groups
     virtual void showMoreDetail();
 protected Q_SLOTS:
+    /// Slot called when an item in a gallery group is clicked
     void onItemClicked(const QModelIndex& index);
+    /// Slot called when an action is triggered from the gallery
     virtual void onTriggered(QAction* action);
 
 private:
     SARibbonGalleryViewport* ensureGetPopupViewPort();
 
 protected:
+    /// Handle resize events for the gallery
     void resizeEvent(QResizeEvent* event) override;
-    void paintEvent(QPaintEvent* event) override;
+    /// Handle change events for the gallery
+    void changeEvent(QEvent* event) override;
 };
 
-///
-/// \brief SARibbonGallery的Viewport class
-///
-class SARibbonGalleryViewport : public QWidget
+/**
+ * \if ENGLISH
+ * @brief Viewport class for SARibbonGallery
+ * \endif
+ *
+ * \if CHINESE
+ * @brief SARibbonGallery的Viewport类
+ * \endif
+ */
+class SARibbonGalleryViewport : public QScrollArea
 {
     Q_OBJECT
 public:
-    SARibbonGalleryViewport(QWidget* parent);
+    explicit SARibbonGalleryViewport(QWidget* parent);
     // 添加窗口不带标题
     void addWidget(QWidget* w);
     // 添加窗口，带标题
@@ -114,12 +180,26 @@ public:
     QLabel* titleLabel(QWidget* w);
     // 移除窗口
     void removeWidget(QWidget* w);
+    // 获取此窗口下所有的SARibbonGalleryGroup
+    QList< SARibbonGalleryGroup* > galleryGroupList() const;
+    // 获取gallery的高度
+    int galleryHeight() const;
+    // 根据宽度计算高度推荐值
+    int heightHintForWidth(int w) const;
 public Q_SLOTS:
     void onTitleChanged(QWidget* w, const QString& title);
 
+protected:  // 新增
+    bool eventFilter(QObject* o, QEvent* e) override;
+    void showEvent(QShowEvent* e) override;
+    void hideEvent(QHideEvent* e) override;
+    void resizeEvent(QResizeEvent* e) override;
+
 private:
-    QVBoxLayout* m_layout;
-    QMap< QWidget*, QLabel* > _widgetToTitleLable;  ///< QWidget和lable的对应
+    QWidget* m_contentWidget { nullptr };            ///< 滚动区域的内容窗口
+    QVBoxLayout* m_layout;                           ///< 内容窗口的布局
+    QMap< QWidget*, QLabel* > m_widgetToTitleLabel;  ///< 窗口到标题标签的映射
+    QSizeGrip* m_sizeGrip;                           ///< 尺寸调整手柄
 };
 
 #endif  // SARIBBONGALLERY_H

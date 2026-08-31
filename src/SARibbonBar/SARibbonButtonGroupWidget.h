@@ -1,58 +1,33 @@
-﻿#ifndef SARIBBONBUTTONGROUPWIDGET_H
+#ifndef SARIBBONBUTTONGROUPWIDGET_H
 #define SARIBBONBUTTONGROUPWIDGET_H
 #include "SARibbonGlobal.h"
 #include <QToolButton>
 #include <QMenu>
-#include <QFrame>
-class SARibbonControlButton;
+#include <QToolBar>
 /**
+ * \if ENGLISH
+ * @brief Widget for managing a group of actions, similar to QToolBar
+ * @details This class provides a widget to manage a group of actions, similar to QToolBar, but with additional functionality for menu actions.
+ * \endif
+ *
+ * \if CHINESE
  * @brief 用于管理一组Action,类似于QToolBar
+ * @details 此类提供一个小部件来管理一组动作，类似于QToolBar，但具有菜单动作的附加功能。
+ * \endif
  */
-class SA_RIBBON_EXPORT SARibbonButtonGroupWidget : public QFrame
+class SA_RIBBON_EXPORT SARibbonButtonGroupWidget : public QToolBar
 {
     Q_OBJECT
-    SA_RIBBON_DECLARE_PRIVATE(SARibbonButtonGroupWidget)
 public:
-    using FpButtonIterate = std::function< bool(SARibbonControlButton*) >;
-
-public:
+    /// Constructor for SARibbonButtonGroupWidget
     explicit SARibbonButtonGroupWidget(QWidget* parent = nullptr);
+    /// Destructor for SARibbonButtonGroupWidget
     ~SARibbonButtonGroupWidget();
 
-    // 图标尺寸
-    void setIconSize(const QSize& ic);
-    QSize iconSize() const;
-    // 生成并添加一个action
-    QAction* addAction(QAction* a,
-                       Qt::ToolButtonStyle buttonStyle          = Qt::ToolButtonIconOnly,
-                       QToolButton::ToolButtonPopupMode popMode = QToolButton::DelayedPopup);
-    QAction* addAction(const QString& text,
-                       const QIcon& icon,
-                       Qt::ToolButtonStyle buttonStyle          = Qt::ToolButtonIconOnly,
-                       QToolButton::ToolButtonPopupMode popMode = QToolButton::DelayedPopup);
-    QAction* addMenu(QMenu* menu,
-                     Qt::ToolButtonStyle buttonStyle          = Qt::ToolButtonIconOnly,
-                     QToolButton::ToolButtonPopupMode popMode = QToolButton::InstantPopup);
-    QAction* addSeparator();
-    QAction* addWidget(QWidget* w);
-    // 从ButtonGroupWidget中把action对应的button提取出来，如果action没有对应的button，就返回nullptr
-    SARibbonControlButton* actionToRibbonControlToolButton(QAction* action);
-
-    QSize sizeHint() const override;
-    QSize minimumSizeHint() const override;
-
-public:
-    bool iterateButton(FpButtonIterate fp);
-Q_SIGNALS:
-
-    /**
-     * @brief 参考QToolBar::actionTriggered的信号
-     * @param action
-     */
-    void actionTriggered(QAction* action);
-
-protected:
-    virtual void actionEvent(QActionEvent* e) override;
+    /// Add a menu QAction to the button group widget
+    void addMenuAction(QAction* menuAction, QToolButton::ToolButtonPopupMode popupMode = QToolButton::InstantPopup);
+    /// Create and add a menu action to the button group widget
+    QAction* addMenuAction(QMenu* menu, QToolButton::ToolButtonPopupMode popupMode = QToolButton::InstantPopup);
 };
 
 #endif  // SARIBBONBUTTONGROUPWIDGET_H

@@ -3,8 +3,7 @@
 #include "SARibbonBar.h"
 #include "SARibbonButtonGroupWidget.h"
 #include "SARibbonCategory.h"
-#include "SARibbonControlButton.h"
-#include "SARibbonPannel.h"
+#include "SARibbonPanel.h"
 
 #include <QAbstractButton>
 #include <QAction>
@@ -37,7 +36,7 @@ ModernBlueStyleWindow::ModernBlueStyleWindow(QWidget* parent) : SARibbonMainWind
 
 	QTimer::singleShot(0, this, [ this ]() {
 		setRibbonTheme(SARibbonTheme::RibbonThemeModernBlue);
-		ribbonBar()->setPannelAlignment(SARibbonAlignment::AlignCenter);
+		ribbonBar()->setPanelAlignment(SARibbonAlignment::AlignCenter);
 		ribbonBar()->setRibbonAlignment(SARibbonAlignment::AlignCenter);
 		ribbonBar()->updateRibbonGeometry();
 	});
@@ -51,13 +50,12 @@ void ModernBlueStyleWindow::buildRibbon()
 	ribbon->setTitleBarHeight(48);
 	ribbon->setTabBarHeight(36);
 	ribbon->setCategoryHeight(100);
-	ribbon->setEnableShowPannelTitle(false);
-	ribbon->setPannelSpacing(8);
-	ribbon->setPannelToolButtonIconSize(QSize(24, 24));
-	ribbon->setButtonTextEllipsisAspectFactor(2.2);
+	ribbon->setEnableShowPanelTitle(false);
+	ribbon->setPanelSpacing(8);
+	ribbon->setPanelSmallIconSize(QSize(24, 24));
 	ribbon->setApplicationButton(createBrandButton(ribbon));
 	ribbon->setRibbonAlignment(SARibbonAlignment::AlignCenter);
-	ribbon->setPannelAlignment(SARibbonAlignment::AlignCenter);
+	ribbon->setPanelAlignment(SARibbonAlignment::AlignCenter);
 	ribbon->showMinimumModeButton(true);
 
 	SARibbonButtonGroupWidget* rightGroup = ribbon->rightButtonGroup();
@@ -69,7 +67,7 @@ void ModernBlueStyleWindow::buildRibbon()
 	}
 	if (QAction* minimumAction = ribbon->minimumModeAction()) {
 		minimumAction->setIcon(QIcon(QStringLiteral(":/SARibbon/image/resource/ArrowUp-w.png")));
-		if (SARibbonControlButton* button = rightGroup->actionToRibbonControlToolButton(minimumAction)) {
+		if (QWidget* button = rightGroup->widgetForAction(minimumAction)) {
 			button->setFixedSize(28, 30);
 		}
 		connect(ribbon, &SARibbonBar::ribbonModeChanged, this, [ minimumAction ](SARibbonBar::RibbonMode mode) {
@@ -82,7 +80,7 @@ void ModernBlueStyleWindow::buildRibbon()
 	QAction* helpAction = new QAction(QIcon(QStringLiteral(":/SARibbon/image/resource/Ask-w.png")), QString(), this);
 	helpAction->setToolTip(QStringLiteral("帮助"));
 	rightGroup->addAction(helpAction);
-	if (SARibbonControlButton* button = rightGroup->actionToRibbonControlToolButton(helpAction)) {
+	if (QWidget* button = rightGroup->widgetForAction(helpAction)) {
 		button->setFixedSize(28, 30);
 	}
 
@@ -95,18 +93,18 @@ void ModernBlueStyleWindow::buildMainCategory(SARibbonBar* ribbon)
 {
 	SARibbonCategory* main = ribbon->addCategoryPage(QStringLiteral("主要"));
 
-	SARibbonPannel* connectPanel = main->addPannel(QStringLiteral("连接"));
+	SARibbonPanel* connectPanel = main->addPanel(QStringLiteral("连接"));
 	connectPanel->addLargeAction(createAction(QStringLiteral("连接"), createGlyphIcon(QStringLiteral("G"), QColor(78, 184, 246), Qt::white)));
 	connectPanel->addLargeAction(createAction(QStringLiteral("窗口可见性"), createGlyphIcon(QStringLiteral("W"), QColor(78, 184, 246), Qt::white)));
 	connectPanel->addSeparator();
 	connectPanel->addLargeAction(createAction(QStringLiteral("拖动控制"), createGlyphIcon(QStringLiteral("M"), QColor(78, 184, 246), Qt::white)));
 
-	SARibbonPannel* viewPanel = main->addPannel(QStringLiteral("视图"));
+	SARibbonPanel* viewPanel = main->addPanel(QStringLiteral("视图"));
 	viewPanel->addSmallAction(createAction(QStringLiteral("左视图"), createGlyphIcon(QStringLiteral("L"), QColor(74, 162, 226), Qt::white)));
 	viewPanel->addSmallAction(createAction(QStringLiteral("右视图"), createGlyphIcon(QStringLiteral("R"), QColor(74, 162, 226), Qt::white)));
 	viewPanel->addSmallAction(createAction(QStringLiteral("适应视图"), createGlyphIcon(QStringLiteral("F"), QColor(74, 162, 226), Qt::white)));
 
-	SARibbonPannel* handPanel = main->addPannel(QStringLiteral("手动"));
+	SARibbonPanel* handPanel = main->addPanel(QStringLiteral("手动"));
 	QActionGroup* handGroup = new QActionGroup(this);
 	QAction* leftHand = createAction(QStringLiteral("左手"), createGlyphIcon(QStringLiteral("L"), QColor(241, 164, 139), Qt::white), true);
 	QAction* rightHand = createAction(QStringLiteral("右手"), createGlyphIcon(QStringLiteral("R"), QColor(241, 164, 139), Qt::white), true);
@@ -116,7 +114,7 @@ void ModernBlueStyleWindow::buildMainCategory(SARibbonBar* ribbon)
 	handPanel->addLargeAction(leftHand);
 	handPanel->addLargeAction(rightHand);
 
-	SARibbonPannel* devicePanel = main->addPannel(QStringLiteral("设备"));
+	SARibbonPanel* devicePanel = main->addPanel(QStringLiteral("设备"));
 	QActionGroup* deviceGroup = new QActionGroup(this);
 	QAction* device1 = createAction(QStringLiteral("Dex-01"), createGlyphIcon(QStringLiteral("D1"), QColor(65, 80, 95), Qt::white), true);
 	QAction* device2 = createAction(QStringLiteral("Dex-02"), createGlyphIcon(QStringLiteral("D2"), QColor(65, 80, 95), Qt::white), true);
@@ -126,22 +124,22 @@ void ModernBlueStyleWindow::buildMainCategory(SARibbonBar* ribbon)
 	devicePanel->addLargeAction(device1);
 	devicePanel->addLargeAction(device2);
 
-	SARibbonPannel* executionPanel = main->addPannel(QStringLiteral("执行"));
+	SARibbonPanel* executionPanel = main->addPanel(QStringLiteral("执行"));
 	executionPanel->addLargeWidget(createExecutionOptions(executionPanel));
 
-	SARibbonPannel* statePanel = main->addPannel(QStringLiteral("状态"));
+	SARibbonPanel* statePanel = main->addPanel(QStringLiteral("状态"));
 	statePanel->addLargeWidget(createStateOptions(statePanel));
 }
 
 void ModernBlueStyleWindow::buildSecondaryCategory(SARibbonBar* ribbon)
 {
 	SARibbonCategory* other = ribbon->addCategoryPage(QStringLiteral("其他"));
-	SARibbonPannel* otherPanel = other->addPannel(QStringLiteral("常用"));
+	SARibbonPanel* otherPanel = other->addPanel(QStringLiteral("常用"));
 	otherPanel->addLargeAction(createAction(QStringLiteral("设置"), createGlyphIcon(QStringLiteral("S"), QColor(54, 132, 204), Qt::white)));
 	otherPanel->addLargeAction(createAction(QStringLiteral("日志"), createGlyphIcon(QStringLiteral("L"), QColor(54, 132, 204), Qt::white)));
 
 	SARibbonCategory* expert = ribbon->addCategoryPage(QStringLiteral("专家"));
-	SARibbonPannel* expertPanel = expert->addPannel(QStringLiteral("调试"));
+	SARibbonPanel* expertPanel = expert->addPanel(QStringLiteral("调试"));
 	expertPanel->addLargeAction(createAction(QStringLiteral("标定"), createGlyphIcon(QStringLiteral("C"), QColor(54, 132, 204), Qt::white)));
 	expertPanel->addLargeAction(createAction(QStringLiteral("诊断"), createGlyphIcon(QStringLiteral("D"), QColor(54, 132, 204), Qt::white)));
 }
@@ -158,7 +156,7 @@ QAction* ModernBlueStyleWindow::createAction(const QString& text, const QIcon& i
 	return action;
 }
 
-QWidget* ModernBlueStyleWindow::createExecutionOptions(SARibbonPannel* parent)
+QWidget* ModernBlueStyleWindow::createExecutionOptions(SARibbonPanel* parent)
 {
 	QWidget* widget = new QWidget(parent);
 	widget->setObjectName(QStringLiteral("ExecutionOptions"));
@@ -176,7 +174,7 @@ QWidget* ModernBlueStyleWindow::createExecutionOptions(SARibbonPannel* parent)
 	return widget;
 }
 
-QWidget* ModernBlueStyleWindow::createStateOptions(SARibbonPannel* parent)
+QWidget* ModernBlueStyleWindow::createStateOptions(SARibbonPanel* parent)
 {
 	QWidget* widget = new QWidget(parent);
 	widget->setObjectName(QStringLiteral("StateOptions"));

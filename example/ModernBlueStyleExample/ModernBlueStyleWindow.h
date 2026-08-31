@@ -10,7 +10,7 @@
 class QAction;
 class QAbstractButton;
 class SARibbonBar;
-class SARibbonPannel;
+class SARibbonPanel;
 class QWidget;
 
 class ModernBlueStyleWindow : public SARibbonMainWindow
@@ -23,8 +23,8 @@ private:
 	void buildMainCategory(SARibbonBar* ribbon);
 	void buildSecondaryCategory(SARibbonBar* ribbon);
 	QAction* createAction(const QString& text, const QIcon& icon, bool checkable = false);
-	QWidget* createExecutionOptions(SARibbonPannel* parent);
-	QWidget* createStateOptions(SARibbonPannel* parent);
+	QWidget* createExecutionOptions(SARibbonPanel* parent);
+	QWidget* createStateOptions(SARibbonPanel* parent);
 	QAbstractButton* createBrandButton(SARibbonBar* ribbon);
 	static QIcon createGlyphIcon(const QString& glyph, const QColor& background, const QColor& foreground);
 };

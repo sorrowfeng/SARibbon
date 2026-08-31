@@ -8,20 +8,27 @@
 
 SARibbonCustomizeData::SARibbonCustomizeData()
     : indexValue(-1)
-    , actionRowProportionValue(SARibbonPannelItem::Large)
+    , actionRowProportionValue(SARibbonPanelItem::Large)
     , mType(UnknowActionType)
     , mActionsManagerPointer(nullptr)
 {
 }
 
 SARibbonCustomizeData::SARibbonCustomizeData(ActionType type, SARibbonActionsManager* mgr)
-    : indexValue(-1), actionRowProportionValue(SARibbonPannelItem::Large), mType(type), mActionsManagerPointer(mgr)
+    : indexValue(-1), actionRowProportionValue(SARibbonPanelItem::Large), mType(type), mActionsManagerPointer(mgr)
 {
 }
 
 /**
+ * \if ENGLISH
+ * @brief Get the action type of the CustomizeData
+ * @return Action type
+ * \endif
+ *
+ * \if CHINESE
  * @brief 获取CustomizeData的action type
- * @return
+ * @return 操作类型
+ * \endif
  */
 SARibbonCustomizeData::ActionType SARibbonCustomizeData::actionType() const
 {
@@ -29,8 +36,15 @@ SARibbonCustomizeData::ActionType SARibbonCustomizeData::actionType() const
 }
 
 /**
+ * \if ENGLISH
+ * @brief Set the action type of the CustomizeData
+ * @param a Action type to set
+ * \endif
+ *
+ * \if CHINESE
  * @brief 设置CustomizeData的action type
- * @param a
+ * @param a 要设置的操作类型
+ * \endif
  */
 void SARibbonCustomizeData::setActionType(SARibbonCustomizeData::ActionType a)
 {
@@ -38,10 +52,17 @@ void SARibbonCustomizeData::setActionType(SARibbonCustomizeData::ActionType a)
 }
 
 /**
- * @brief 判断是否是一个正常的CustomizeData
+ * \if ENGLISH
+ * @brief Check if this is a valid CustomizeData
+ * @details Actual logic: actionType() != UnknowActionType
+ * @return true if the CustomizeData is valid
+ * \endif
  *
- * 实际逻辑actionType() != UnknowActionType
+ * \if CHINESE
+ * @brief 判断是否是一个正常的CustomizeData
+ * @details 实际逻辑actionType() != UnknowActionType
  * @return 有用的CustomizeData返回true
+ * \endif
  */
 bool SARibbonCustomizeData::isValid() const
 {
@@ -49,9 +70,17 @@ bool SARibbonCustomizeData::isValid() const
 }
 
 /**
+ * \if ENGLISH
+ * @brief Apply SARibbonCustomizeData to SARibbonBar
+ * @param m SARibbonBar to apply to
+ * @return If application fails, returns false; if actionType==UnknowActionType, directly returns false
+ * \endif
+ *
+ * \if CHINESE
  * @brief 应用SARibbonCustomizeData到SARibbonBar
- * @param m
+ * @param m 要应用到的 SARibbonBar
  * @return 如果应用失败，返回false,如果actionType==UnknowActionType直接返回false
+ * \endif
  */
 bool SARibbonCustomizeData::apply(SARibbonBar* bar) const
 {
@@ -73,14 +102,14 @@ bool SARibbonCustomizeData::apply(SARibbonBar* bar) const
         return (true);
     }
 
-    case AddPannelActionType: {
-        // 添加pannel
+    case AddPanelActionType: {
+        // 添加panel
         SARibbonCategory* c = bar->categoryByObjectName(categoryObjNameValue);
         if (nullptr == c) {
             return (false);
         }
-        SARibbonPannel* p = c->insertPannel(keyValue, indexValue);
-        p->setObjectName(pannelObjNameValue);
+        SARibbonPanel* p = c->insertPanel(keyValue, indexValue);
+        p->setObjectName(panelObjNameValue);
         SARibbonCustomizeData::setCanCustomize(p);
         return (true);
     }
@@ -93,8 +122,8 @@ bool SARibbonCustomizeData::apply(SARibbonBar* bar) const
         if (nullptr == c) {
             return (false);
         }
-        SARibbonPannel* pannel = c->pannelByObjectName(pannelObjNameValue);
-        if (nullptr == pannel) {
+        SARibbonPanel* panel = c->panelByObjectName(panelObjNameValue);
+        if (nullptr == panel) {
             return (false);
         }
         QAction* act = mActionsManagerPointer->action(keyValue);
@@ -102,7 +131,7 @@ bool SARibbonCustomizeData::apply(SARibbonBar* bar) const
             return (false);
         }
         SARibbonCustomizeData::setCanCustomize(act);
-        pannel->addAction(act, actionRowProportionValue);
+        panel->addAction(act, actionRowProportionValue);
         return (true);
     }
 
@@ -115,16 +144,16 @@ bool SARibbonCustomizeData::apply(SARibbonBar* bar) const
         return (true);
     }
 
-    case RemovePannelActionType: {
+    case RemovePanelActionType: {
         SARibbonCategory* c = bar->categoryByObjectName(categoryObjNameValue);
         if (nullptr == c) {
             return (false);
         }
-        SARibbonPannel* pannel = c->pannelByObjectName(pannelObjNameValue);
-        if (nullptr == pannel) {
+        SARibbonPanel* panel = c->panelByObjectName(panelObjNameValue);
+        if (nullptr == panel) {
             return (false);
         }
-        c->removePannel(pannel);
+        c->removePanel(panel);
         return (true);
     }
 
@@ -133,15 +162,15 @@ bool SARibbonCustomizeData::apply(SARibbonBar* bar) const
         if (nullptr == c) {
             return (false);
         }
-        SARibbonPannel* pannel = c->pannelByObjectName(pannelObjNameValue);
-        if (nullptr == pannel) {
+        SARibbonPanel* panel = c->panelByObjectName(panelObjNameValue);
+        if (nullptr == panel) {
             return (false);
         }
         QAction* act = mActionsManagerPointer->action(keyValue);
         if (nullptr == act) {
             return (false);
         }
-        pannel->removeAction(act);
+        panel->removeAction(act);
         return (true);
     }
 
@@ -159,20 +188,20 @@ bool SARibbonCustomizeData::apply(SARibbonBar* bar) const
         return (true);
     }
 
-    case ChangePannelOrderActionType: {
+    case ChangePanelOrderActionType: {
         SARibbonCategory* c = bar->categoryByObjectName(categoryObjNameValue);
         if (nullptr == c) {
             return (false);
         }
-        SARibbonPannel* pannel = c->pannelByObjectName(pannelObjNameValue);
-        if (nullptr == pannel) {
+        SARibbonPanel* panel = c->panelByObjectName(panelObjNameValue);
+        if (nullptr == panel) {
             return (false);
         }
-        int pannelIndex = c->pannelIndex(pannel);
-        if (-1 == pannelIndex) {
+        int panelIndex = c->panelIndex(panel);
+        if (-1 == panelIndex) {
             return (false);
         }
-        c->movePannel(pannelIndex, pannelIndex + indexValue);
+        c->movePanel(panelIndex, panelIndex + indexValue);
         return (true);
     }
 
@@ -181,19 +210,19 @@ bool SARibbonCustomizeData::apply(SARibbonBar* bar) const
         if (nullptr == c) {
             return (false);
         }
-        SARibbonPannel* pannel = c->pannelByObjectName(pannelObjNameValue);
-        if (nullptr == pannel) {
+        SARibbonPanel* panel = c->panelByObjectName(panelObjNameValue);
+        if (nullptr == panel) {
             return (false);
         }
         QAction* act = mActionsManagerPointer->action(keyValue);
         if (nullptr == act) {
             return (false);
         }
-        int actindex = pannel->actionIndex(act);
+        int actindex = panel->actionIndex(act);
         if (actindex <= -1) {
             return (false);
         }
-        pannel->moveAction(actindex, actindex + indexValue);
+        panel->moveAction(actindex, actindex + indexValue);
         return (true);
     }
 
@@ -206,16 +235,16 @@ bool SARibbonCustomizeData::apply(SARibbonBar* bar) const
         return (true);
     }
 
-    case RenamePannelActionType: {
+    case RenamePanelActionType: {
         SARibbonCategory* c = bar->categoryByObjectName(categoryObjNameValue);
         if (nullptr == c) {
             return (false);
         }
-        SARibbonPannel* pannel = c->pannelByObjectName(pannelObjNameValue);
-        if (nullptr == pannel) {
+        SARibbonPanel* panel = c->panelByObjectName(panelObjNameValue);
+        if (nullptr == panel) {
             return (false);
         }
-        pannel->setPannelName(keyValue);
+        panel->setPanelName(keyValue);
         return (true);
     }
 
@@ -239,8 +268,15 @@ bool SARibbonCustomizeData::apply(SARibbonBar* bar) const
 }
 
 /**
+ * \if ENGLISH
+ * @brief Get the action manager pointer
+ * @return SARibbonActionsManager pointer
+ * \endif
+ *
+ * \if CHINESE
  * @brief 获取actionmanager指针
- * @return
+ * @return SARibbonActionsManager 指针
+ * \endif
  */
 SARibbonActionsManager* SARibbonCustomizeData::actionManager()
 {
@@ -248,8 +284,15 @@ SARibbonActionsManager* SARibbonCustomizeData::actionManager()
 }
 
 /**
+ * \if ENGLISH
+ * @brief Set the ActionsManager
+ * @param mgr SARibbonActionsManager pointer to set
+ * \endif
+ *
+ * \if CHINESE
  * @brief 设置ActionsManager
- * @param mgr
+ * @param mgr 要设置的 SARibbonActionsManager 指针
+ * \endif
  */
 void SARibbonCustomizeData::setActionsManager(SARibbonActionsManager* mgr)
 {
@@ -257,11 +300,21 @@ void SARibbonCustomizeData::setActionsManager(SARibbonActionsManager* mgr)
 }
 
 /**
+ * \if ENGLISH
+ * @brief Create an AddCategoryActionType SARibbonCustomizeData
+ * @param title Category title
+ * @param index Position to insert the category
+ * @param objName Object name of the category
+ * @return SARibbonCustomizeData with AddCategoryActionType
+ * \endif
+ *
+ * \if CHINESE
  * @brief 创建一个AddCategoryActionType的SARibbonCustomizeData
  * @param title category 的标题
  * @param index category要插入的位置
  * @param objName category的object name
  * @return 返回AddCategoryActionType的SARibbonCustomizeData
+ * \endif
  */
 SARibbonCustomizeData SARibbonCustomizeData::makeAddCategoryCustomizeData(const QString& title, int index, const QString& objName)
 {
@@ -274,58 +327,89 @@ SARibbonCustomizeData SARibbonCustomizeData::makeAddCategoryCustomizeData(const 
 }
 
 /**
- * @brief 创建一个AddPannelActionType的SARibbonCustomizeData
- * @param title pannel的标题
- * @param index pannel的index
- * @param categoryobjName pannel的category的objectname
- * @param objName pannel的objname
- * @return 返回AddPannelActionType的SARibbonCustomizeData
+ * \if ENGLISH
+ * @brief Create an AddPanelActionType SARibbonCustomizeData
+ * @param title Panel title
+ * @param index Panel index
+ * @param categoryobjName Object name of the panel's category
+ * @param objName Object name of the panel
+ * @return SARibbonCustomizeData with AddPanelActionType
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 创建一个AddPanelActionType的SARibbonCustomizeData
+ * @param title panel的标题
+ * @param index panel的index
+ * @param categoryobjName panel的category的objectname
+ * @param objName panel的objname
+ * @return 返回AddPanelActionType的SARibbonCustomizeData
+ * \endif
  */
-SARibbonCustomizeData SARibbonCustomizeData::makeAddPannelCustomizeData(const QString& title,
-                                                                        int index,
-                                                                        const QString& categoryobjName,
-                                                                        const QString& objName)
+SARibbonCustomizeData SARibbonCustomizeData::makeAddPanelCustomizeData(const QString& title,
+                                                                       int index,
+                                                                       const QString& categoryobjName,
+                                                                       const QString& objName)
 {
-    SARibbonCustomizeData d(AddPannelActionType);
+    SARibbonCustomizeData d(AddPanelActionType);
 
     d.indexValue           = index;
     d.keyValue             = title;
-    d.pannelObjNameValue   = objName;
+    d.panelObjNameValue    = objName;
     d.categoryObjNameValue = categoryobjName;
     return (d);
 }
 
 /**
+ * \if ENGLISH
+ * @brief Add action
+ * @param key Action index key
+ * @param mgr Action manager
+ * @param rp Define the action's row proportion
+ * @param categoryObjName Object name of the category to add action to
+ * @param panelObjName Object name of the panel under the category to add action to
+ * @return SARibbonCustomizeData with AddActionActionType
+ * \endif
+ *
+ * \if CHINESE
  * @brief 添加action
  * @param key action的索引
  * @param mgr action管理器
  * @param rp 定义action的占位情况
  * @param categoryObjName action添加到的category的objname
- * @param pannelObjName action添加到的category下的pannel的objname
- * @param index action添加到的pannel的索引
- * @return
+ * @param panelObjName action添加到的category下的panel的objname
+ * @return 返回AddActionActionType的SARibbonCustomizeData
+ * \endif
  */
 SARibbonCustomizeData SARibbonCustomizeData::makeAddActionCustomizeData(const QString& key,
                                                                         SARibbonActionsManager* mgr,
-                                                                        SARibbonPannelItem::RowProportion rp,
+                                                                        SARibbonPanelItem::RowProportion rp,
                                                                         const QString& categoryObjName,
-                                                                        const QString& pannelObjName)
+                                                                        const QString& panelObjName)
 {
     SARibbonCustomizeData d(AddActionActionType, mgr);
 
     d.keyValue                 = key;
     d.categoryObjNameValue     = categoryObjName;
-    d.pannelObjNameValue       = pannelObjName;
+    d.panelObjNameValue        = panelObjName;
     d.actionRowProportionValue = rp;
 
     return (d);
 }
 
 /**
+ * \if ENGLISH
+ * @brief Create a RenameCategoryActionType SARibbonCustomizeData
+ * @param newname New name for the category
+ * @param categoryobjName Object name of the category
+ * @return SARibbonCustomizeData with RenameCategoryActionType
+ * \endif
+ *
+ * \if CHINESE
  * @brief 创建一个RenameCategoryActionType的SARibbonCustomizeData
  * @param newname 新名字
- * @param index category的索引
+ * @param categoryobjName category的object name
  * @return 返回RenameCategoryActionType的SARibbonCustomizeData
+ * \endif
  */
 SARibbonCustomizeData SARibbonCustomizeData::makeRenameCategoryCustomizeData(const QString& newname,
                                                                              const QString& categoryobjName)
@@ -344,35 +428,54 @@ SARibbonCustomizeData SARibbonCustomizeData::makeRenameCategoryCustomizeData(con
 }
 
 /**
- * @brief 创建一个RenamePannelActionType的SARibbonCustomizeData
- * @param newname pannel的名字
- * @param indexValue pannel的索引
- * @param categoryobjName pannel对应的category的object name
- * @return 返回RenamePannelActionType的SARibbonCustomizeData
+ * \if ENGLISH
+ * @brief Create a RenamePanelActionType SARibbonCustomizeData
+ * @param newname New name for the panel
+ * @param categoryobjName Object name of the category the panel belongs to
+ * @param panelObjName Object name of the panel
+ * @return SARibbonCustomizeData with RenamePanelActionType
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 创建一个RenamePanelActionType的SARibbonCustomizeData
+ * @param newname panel的名字
+ * @param categoryobjName panel对应的category的object name
+ * @param panelObjName panel的object name
+ * @return 返回RenamePanelActionType的SARibbonCustomizeData
+ * \endif
  */
-SARibbonCustomizeData SARibbonCustomizeData::makeRenamePannelCustomizeData(const QString& newname,
-                                                                           const QString& categoryobjName,
-                                                                           const QString& pannelObjName)
+SARibbonCustomizeData SARibbonCustomizeData::makeRenamePanelCustomizeData(const QString& newname,
+                                                                          const QString& categoryobjName,
+                                                                          const QString& panelObjName)
 {
-    SARibbonCustomizeData d(RenamePannelActionType);
+    SARibbonCustomizeData d(RenamePanelActionType);
 
-    if (pannelObjName.isEmpty() || categoryobjName.isEmpty()) {
-        qDebug() << QObject::tr("SARibbon Warning !!! customize rename pannel,"
-                                "but get an empty category/pannel object name,"
+    if (panelObjName.isEmpty() || categoryobjName.isEmpty()) {
+        qDebug() << QObject::tr("SARibbon Warning !!! customize rename panel,"
+                                "but get an empty category/panel object name,"
                                 "if you want to customize SARibbon,"
                                 "please make sure every element has been set object name.");
     }
     d.keyValue             = newname;
-    d.pannelObjNameValue   = pannelObjName;
+    d.panelObjNameValue    = panelObjName;
     d.categoryObjNameValue = categoryobjName;
     return (d);
 }
 
 /**
+ * \if ENGLISH
+ * @brief Create a ChangeCategoryOrderActionType SARibbonCustomizeData
+ * @param categoryobjName Object name of the category to move
+ * @param moveindex Move position, -1 means move up (left) one position, 1 means move down (right) one position
+ * @return SARibbonCustomizeData with ChangeCategoryOrderActionType
+ * \endif
+ *
+ * \if CHINESE
  * @brief 对应ChangeCategoryOrderActionType
  * @param categoryobjName 需要移动的categoryobjName
  * @param moveindex 移动位置，-1代表向上（向左）移动一个位置，1带表向下（向右）移动一个位置
- * @return
+ * @return 返回ChangeCategoryOrderActionType的SARibbonCustomizeData
+ * \endif
  */
 SARibbonCustomizeData SARibbonCustomizeData::makeChangeCategoryOrderCustomizeData(const QString& categoryobjName,
                                                                                   int moveindex)
@@ -391,64 +494,94 @@ SARibbonCustomizeData SARibbonCustomizeData::makeChangeCategoryOrderCustomizeDat
 }
 
 /**
- * @brief 对应ChangePannelOrderActionType
- * @param categoryobjName 需要移动的pannel对应的categoryobjName
- * @param pannelObjName 需要移动的pannelObjName
+ * \if ENGLISH
+ * @brief Create a ChangePanelOrderActionType SARibbonCustomizeData
+ * @param categoryobjName Object name of the category the panel belongs to
+ * @param panelObjName Object name of the panel to move
+ * @param moveindex Move position, -1 means move up (left) one position, 1 means move down (right) one position
+ * @return SARibbonCustomizeData with ChangePanelOrderActionType
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 对应ChangePanelOrderActionType
+ * @param categoryobjName 需要移动的panel对应的categoryobjName
+ * @param panelObjName 需要移动的panelObjName
  * @param moveindex 移动位置，-1代表向上（向左）移动一个位置，1带表向下（向右）移动一个位置
- * @return
+ * @return 返回ChangePanelOrderActionType的SARibbonCustomizeData
+ * \endif
  */
-SARibbonCustomizeData SARibbonCustomizeData::makeChangePannelOrderCustomizeData(const QString& categoryobjName,
-                                                                                const QString& pannelObjName,
-                                                                                int moveindex)
+SARibbonCustomizeData SARibbonCustomizeData::makeChangePanelOrderCustomizeData(const QString& categoryobjName,
+                                                                               const QString& panelObjName,
+                                                                               int moveindex)
 {
-    SARibbonCustomizeData d(ChangePannelOrderActionType);
+    SARibbonCustomizeData d(ChangePanelOrderActionType);
 
-    if (categoryobjName.isEmpty() || pannelObjName.isEmpty()) {
-        qDebug() << QObject::tr("SARibbon Warning !!! customize change pannel order,"
-                                "but get an empty category/pannel object name,"
+    if (categoryobjName.isEmpty() || panelObjName.isEmpty()) {
+        qDebug() << QObject::tr("SARibbon Warning !!! customize change panel order,"
+                                "but get an empty category/panel object name,"
                                 "if you want to customize SARibbon,"
                                 "please make sure every element has been set object name.");
     }
     d.categoryObjNameValue = categoryobjName;
-    d.pannelObjNameValue   = pannelObjName;
+    d.panelObjNameValue    = panelObjName;
     d.indexValue           = moveindex;
     return (d);
 }
 
 /**
+ * \if ENGLISH
+ * @brief Create a ChangeActionOrderActionType SARibbonCustomizeData
+ * @param categoryobjName Object name of the category the panel belongs to
+ * @param panelObjName Object name of the panel the action belongs to
+ * @param key Key name managed by SARibbonActionsManager
+ * @param mgr SARibbonActionsManager pointer
+ * @param moveindex Move position, -1 means move up (left) one position, 1 means move down (right) one position
+ * @return SARibbonCustomizeData with ChangeActionOrderActionType
+ * \endif
+ *
+ * \if CHINESE
  * @brief 对应ChangeActionOrderActionType
- * @param categoryobjName 需要移动的pannel对应的categoryobjName
- * @param pannelObjName 需要移动的pannelObjName
+ * @param categoryobjName 需要移动的panel对应的categoryobjName
+ * @param panelObjName 需要移动的panelObjName
  * @param key SARibbonActionsManager管理的key名
  * @param mgr SARibbonActionsManager指针
  * @param moveindex 移动位置，-1代表向上（向左）移动一个位置，1带表向下（向右）移动一个位置
- * @return
+ * @return 返回ChangeActionOrderActionType的SARibbonCustomizeData
+ * \endif
  */
 SARibbonCustomizeData SARibbonCustomizeData::makeChangeActionOrderCustomizeData(const QString& categoryobjName,
-                                                                                const QString& pannelObjName,
+                                                                                const QString& panelObjName,
                                                                                 const QString& key,
                                                                                 SARibbonActionsManager* mgr,
                                                                                 int moveindex)
 {
     SARibbonCustomizeData d(ChangeActionOrderActionType, mgr);
 
-    if (categoryobjName.isEmpty() || pannelObjName.isEmpty() || key.isEmpty()) {
+    if (categoryobjName.isEmpty() || panelObjName.isEmpty() || key.isEmpty()) {
         qDebug() << QObject::tr("SARibbon Warning !!! customize change action order,"
-                                "but get an empty category/pannel/action object name,"
+                                "but get an empty category/panel/action object name,"
                                 "if you want to customize SARibbon,"
                                 "please make sure every element has been set object name.");
     }
     d.categoryObjNameValue = categoryobjName;
-    d.pannelObjNameValue   = pannelObjName;
+    d.panelObjNameValue    = panelObjName;
     d.keyValue             = key;
     d.indexValue           = moveindex;
     return (d);
 }
 
 /**
+ * \if ENGLISH
+ * @brief Create a RemoveCategoryActionType SARibbonCustomizeData
+ * @param categoryobjName Object name of the category to remove
+ * @return SARibbonCustomizeData with RemoveCategoryActionType
+ * \endif
+ *
+ * \if CHINESE
  * @brief 对应RemoveCategoryActionType
  * @param categoryobjName 需要移除的objname
- * @return
+ * @return 返回RemoveCategoryActionType的SARibbonCustomizeData
+ * \endif
  */
 SARibbonCustomizeData SARibbonCustomizeData::makeRemoveCategoryCustomizeData(const QString& categoryobjName)
 {
@@ -465,59 +598,88 @@ SARibbonCustomizeData SARibbonCustomizeData::makeRemoveCategoryCustomizeData(con
 }
 
 /**
- * @brief 对应RemovePannelActionType
- * @param categoryobjName pannel对应的category的obj name
- * @param pannelObjName pannel对应的 obj name
- * @return
+ * \if ENGLISH
+ * @brief Create a RemovePanelActionType SARibbonCustomizeData
+ * @param categoryobjName Object name of the category the panel belongs to
+ * @param panelObjName Object name of the panel to remove
+ * @return SARibbonCustomizeData with RemovePanelActionType
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 对应RemovePanelActionType
+ * @param categoryobjName panel对应的category的obj name
+ * @param panelObjName panel对应的 obj name
+ * @return 返回RemovePanelActionType的SARibbonCustomizeData
+ * \endif
  */
-SARibbonCustomizeData SARibbonCustomizeData::makeRemovePannelCustomizeData(const QString& categoryobjName,
-                                                                           const QString& pannelObjName)
+SARibbonCustomizeData SARibbonCustomizeData::makeRemovePanelCustomizeData(const QString& categoryobjName,
+                                                                          const QString& panelObjName)
 {
-    SARibbonCustomizeData d(RemovePannelActionType);
+    SARibbonCustomizeData d(RemovePanelActionType);
 
-    if (categoryobjName.isEmpty() || pannelObjName.isEmpty()) {
-        qDebug() << QObject::tr("SARibbon Warning !!! customize remove pannel,"
-                                "but get an empty category/pannel object name,"
+    if (categoryobjName.isEmpty() || panelObjName.isEmpty()) {
+        qDebug() << QObject::tr("SARibbon Warning !!! customize remove panel,"
+                                "but get an empty category/panel object name,"
                                 "if you want to customize SARibbon,"
                                 "please make sure every element has been set object name.");
     }
     d.categoryObjNameValue = categoryobjName;
-    d.pannelObjNameValue   = pannelObjName;
+    d.panelObjNameValue    = panelObjName;
     return (d);
 }
 
 /**
+ * \if ENGLISH
+ * @brief Create a RemoveActionActionType SARibbonCustomizeData
+ * @param categoryobjName Object name of the category the panel belongs to
+ * @param panelObjName Object name of the panel the action belongs to
+ * @param key Key name managed by SARibbonActionsManager
+ * @param mgr SARibbonActionsManager pointer
+ * @return SARibbonCustomizeData with RemoveActionActionType
+ * \endif
+ *
+ * \if CHINESE
  * @brief 对应RemoveActionActionType
- * @param categoryobjName pannel对应的category的obj name
- * @param pannelObjName pannel对应的 obj name
+ * @param categoryobjName panel对应的category的obj name
+ * @param panelObjName panel对应的 obj name
  * @param key SARibbonActionsManager管理的key名
  * @param mgr SARibbonActionsManager指针
- * @return
+ * @return 返回RemoveActionActionType的SARibbonCustomizeData
+ * \endif
  */
 SARibbonCustomizeData SARibbonCustomizeData::makeRemoveActionCustomizeData(const QString& categoryobjName,
-                                                                           const QString& pannelObjName,
+                                                                           const QString& panelObjName,
                                                                            const QString& key,
                                                                            SARibbonActionsManager* mgr)
 {
     SARibbonCustomizeData d(RemoveActionActionType, mgr);
 
-    if (categoryobjName.isEmpty() || pannelObjName.isEmpty() || key.isEmpty()) {
+    if (categoryobjName.isEmpty() || panelObjName.isEmpty() || key.isEmpty()) {
         qDebug() << QObject::tr("SARibbon Warning !!! customize remove action,"
-                                "but get an empty category/pannel/action object name,"
+                                "but get an empty category/panel/action object name,"
                                 "if you want to customize SARibbon,"
                                 "please make sure every element has been set object name.");
     }
     d.categoryObjNameValue = categoryobjName;
-    d.pannelObjNameValue   = pannelObjName;
+    d.panelObjNameValue    = panelObjName;
     d.keyValue             = key;
     return (d);
 }
 
 /**
- * @brief SARibbonCustomizeData::makeVisibleCategoryCustomizeData
- * @param categoryobjName
- * @param isShow
- * @return
+ * \if ENGLISH
+ * @brief Create a VisibleCategoryActionType SARibbonCustomizeData
+ * @param categoryobjName Object name of the category
+ * @param isShow Whether to show the category
+ * @return SARibbonCustomizeData with VisibleCategoryActionType
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 创建一个VisibleCategoryActionType的SARibbonCustomizeData
+ * @param categoryobjName category的object name
+ * @param isShow 是否显示
+ * @return 返回VisibleCategoryActionType的SARibbonCustomizeData
+ * \endif
  */
 SARibbonCustomizeData SARibbonCustomizeData::makeVisibleCategoryCustomizeData(const QString& categoryobjName, bool isShow)
 {
@@ -535,9 +697,17 @@ SARibbonCustomizeData SARibbonCustomizeData::makeVisibleCategoryCustomizeData(co
 }
 
 /**
+ * \if ENGLISH
+ * @brief Check the external property whether customization is allowed
+ * @param obj Object to check
+ * @return true if customization is allowed
+ * \endif
+ *
+ * \if CHINESE
  * @brief 判断外置属性，是否允许自定义
- * @param obj
- * @return
+ * @param obj 要检查的对象
+ * @return 如果允许自定义返回true
+ * \endif
  */
 bool SARibbonCustomizeData::isCanCustomize(QObject* obj)
 {
@@ -550,9 +720,17 @@ bool SARibbonCustomizeData::isCanCustomize(QObject* obj)
 }
 
 /**
+ * \if ENGLISH
+ * @brief Set the external property to allow customization
+ * @param obj Object to set
+ * @param canbe Whether to allow customization
+ * \endif
+ *
+ * \if CHINESE
  * @brief 设置外置属性允许自定义
- * @param obj
- * @param canbe
+ * @param obj 要设置的对象
+ * @param canbe 是否允许自定义
+ * \endif
  */
 void SARibbonCustomizeData::setCanCustomize(QObject* obj, bool canbe)
 {
@@ -577,13 +755,13 @@ QList< SARibbonCustomizeData > remove_indexs(const QList< SARibbonCustomizeData 
  * @brief 对QList<SARibbonCustomizeData>进行简化操作
  *
  * 此函数会执行如下操作：
- * 1、针对同一个category/pannel连续出现的添加和删除操作进行移除（前一步添加，后一步删除）
+ * 1、针对同一个category/panel连续出现的添加和删除操作进行移除（前一步添加，后一步删除）
  *
  * 2、针对VisibleCategoryActionType，对于连续出现的操作只保留最后一步
  *
- * 3、针对RenameCategoryActionType和RenamePannelActionType操作，只保留最后一个
+ * 3、针对RenameCategoryActionType和RenamePanelActionType操作，只保留最后一个
  *
- * 4、针对连续的ChangeCategoryOrderActionType，ChangePannelOrderActionType，ChangeActionOrderActionType进行合并为一个动作，
+ * 4、针对连续的ChangeCategoryOrderActionType，ChangePanelOrderActionType，ChangeActionOrderActionType进行合并为一个动作，
  * 如果合并后原地不动，则删除
  *
  * @param csd
@@ -605,14 +783,13 @@ QList< SARibbonCustomizeData > SARibbonCustomizeData::simplify(const QList< SARi
             if (csd[ i - 1 ].categoryObjNameValue == csd[ i ].categoryObjNameValue) {
                 willremoveIndex << i - 1 << i;
             }
-        } else if ((csd[ i - 1 ].actionType() == AddPannelActionType) && (csd[ i ].actionType() == RemovePannelActionType)) {
-            if ((csd[ i - 1 ].pannelObjNameValue == csd[ i ].pannelObjNameValue)
+        } else if ((csd[ i - 1 ].actionType() == AddPanelActionType) && (csd[ i ].actionType() == RemovePanelActionType)) {
+            if ((csd[ i - 1 ].panelObjNameValue == csd[ i ].panelObjNameValue)
                 && (csd[ i - 1 ].categoryObjNameValue == csd[ i ].categoryObjNameValue)) {
                 willremoveIndex << i - 1 << i;
             }
         } else if ((csd[ i - 1 ].actionType() == AddActionActionType) && (csd[ i ].actionType() == RemoveActionActionType)) {
-            if ((csd[ i - 1 ].keyValue == csd[ i ].keyValue)
-                && (csd[ i - 1 ].pannelObjNameValue == csd[ i ].pannelObjNameValue)
+            if ((csd[ i - 1 ].keyValue == csd[ i ].keyValue) && (csd[ i - 1 ].panelObjNameValue == csd[ i ].panelObjNameValue)
                 && (csd[ i - 1 ].categoryObjNameValue == csd[ i ].categoryObjNameValue)) {
                 willremoveIndex << i - 1 << i;
             }
@@ -635,7 +812,7 @@ QList< SARibbonCustomizeData > SARibbonCustomizeData::simplify(const QList< SARi
     res = remove_indexs(res, willremoveIndex);
     willremoveIndex.clear();
 
-    //! 针对RenameCategoryActionType和RenamePannelActionType操作，只需保留最后一个
+    //! 针对RenameCategoryActionType和RenamePanelActionType操作，只需保留最后一个
     size = res.size();
     for (int i = 0; i < size; ++i) {
         if (res[ i ].actionType() == RenameCategoryActionType) {
@@ -646,11 +823,11 @@ QList< SARibbonCustomizeData > SARibbonCustomizeData::simplify(const QList< SARi
                     willremoveIndex << i;
                 }
             }
-        } else if (res[ i ].actionType() == RenamePannelActionType) {
-            // 向后查询，如果查询到有同一个pannel改名，把这个索引加入删除队列
+        } else if (res[ i ].actionType() == RenamePanelActionType) {
+            // 向后查询，如果查询到有同一个panel改名，把这个索引加入删除队列
             for (int j = i + 1; j < size; ++j) {
-                if ((res[ j ].actionType() == RenamePannelActionType)
-                    && (res[ i ].pannelObjNameValue == res[ j ].pannelObjNameValue)
+                if ((res[ j ].actionType() == RenamePanelActionType)
+                    && (res[ i ].panelObjNameValue == res[ j ].panelObjNameValue)
                     && (res[ i ].categoryObjNameValue == res[ j ].categoryObjNameValue)) {
                     willremoveIndex << i;
                 }
@@ -660,7 +837,7 @@ QList< SARibbonCustomizeData > SARibbonCustomizeData::simplify(const QList< SARi
     res = remove_indexs(res, willremoveIndex);
     willremoveIndex.clear();
 
-    //! 针对连续的ChangeCategoryOrderActionType，ChangePannelOrderActionType，ChangeActionOrderActionType进行合并
+    //! 针对连续的ChangeCategoryOrderActionType，ChangePanelOrderActionType，ChangeActionOrderActionType进行合并
     size = res.size();
     for (int i = 1; i < size; ++i) {
         if ((res[ i - 1 ].actionType() == ChangeCategoryOrderActionType)
@@ -669,16 +846,16 @@ QList< SARibbonCustomizeData > SARibbonCustomizeData::simplify(const QList< SARi
             // 说明连续两个顺序调整，把前一个indexvalue和后一个indexvalue相加，前一个删除
             res[ i ].indexValue += res[ i - 1 ].indexValue;
             willremoveIndex << i - 1;
-        } else if ((res[ i - 1 ].actionType() == ChangePannelOrderActionType)
-                   && (res[ i ].actionType() == ChangePannelOrderActionType)
-                   && (res[ i - 1 ].pannelObjNameValue == res[ i ].pannelObjNameValue)
+        } else if ((res[ i - 1 ].actionType() == ChangePanelOrderActionType)
+                   && (res[ i ].actionType() == ChangePanelOrderActionType)
+                   && (res[ i - 1 ].panelObjNameValue == res[ i ].panelObjNameValue)
                    && (res[ i - 1 ].categoryObjNameValue == res[ i ].categoryObjNameValue)) {
             // 说明连续两个顺序调整，把前一个indexvalue和后一个indexvalue相加，前一个删除
             res[ i ].indexValue += res[ i - 1 ].indexValue;
             willremoveIndex << i - 1;
         } else if ((res[ i - 1 ].actionType() == ChangeActionOrderActionType)
                    && (res[ i ].actionType() == ChangeActionOrderActionType) && (res[ i - 1 ].keyValue == res[ i ].keyValue)
-                   && (res[ i - 1 ].pannelObjNameValue == res[ i ].pannelObjNameValue)
+                   && (res[ i - 1 ].panelObjNameValue == res[ i ].panelObjNameValue)
                    && (res[ i - 1 ].categoryObjNameValue == res[ i ].categoryObjNameValue)) {
             // 说明连续两个顺序调整，把前一个indexvalue和后一个indexvalue相加，前一个删除
             res[ i ].indexValue += res[ i - 1 ].indexValue;
@@ -691,7 +868,7 @@ QList< SARibbonCustomizeData > SARibbonCustomizeData::simplify(const QList< SARi
     //! 上一步操作可能会产生indexvalue为0的情况，此操作把indexvalue为0的删除
     size = res.size();
     for (int i = 0; i < size; ++i) {
-        if ((res[ i ].actionType() == ChangeCategoryOrderActionType) || (res[ i ].actionType() == ChangePannelOrderActionType)
+        if ((res[ i ].actionType() == ChangeCategoryOrderActionType) || (res[ i ].actionType() == ChangePanelOrderActionType)
             || (res[ i ].actionType() == ChangeActionOrderActionType)) {
             if (0 == res[ i ].indexValue) {
                 willremoveIndex << i;

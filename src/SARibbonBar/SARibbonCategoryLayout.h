@@ -1,4 +1,4 @@
-﻿#ifndef SARIBBONCATEGORYLAYOUT_H
+#ifndef SARIBBONCATEGORYLAYOUT_H
 #define SARIBBONCATEGORYLAYOUT_H
 #include "SARibbonGlobal.h"
 #include <QLayout>
@@ -6,90 +6,149 @@
 #include <QMap>
 #include "SARibbonCategory.h"
 
-class SARibbonPannel;
+class SARibbonPanel;
 class SARibbonCategoryLayoutItem;
 class SARibbonSeparatorWidget;
 
 /**
- * @brief The SARibbonCategoryLayout class
+ * \if ENGLISH
+ * @brief Layout class for SARibbonCategory
+ * @details This class handles the layout of panels in a SARibbonCategory, including scrolling and animation support
+ * \endif
+ *
+ * \if CHINESE
+ * @brief SARibbonCategory 的布局类
+ * @details 此类处理 SARibbonCategory 中面板的布局，包括滚动和动画支持
+ * \endif
  */
 class SA_RIBBON_EXPORT SARibbonCategoryLayout : public QLayout
 {
     Q_OBJECT
     SA_RIBBON_DECLARE_PRIVATE(SARibbonCategoryLayout)
 public:
+    Q_PROPERTY(int scrollPosition READ scrollPosition WRITE setScrollPosition)
+    // == Cache members (mutable for const lazy evaluation) ==
+private:
+    mutable QSize mCachedSizeHint;
+    mutable QSize mCachedMinSizeHint;
+public:
+    /// Constructor for SARibbonCategoryLayout
     explicit SARibbonCategoryLayout(SARibbonCategory* parent);
+    /// Destructor for SARibbonCategoryLayout
     ~SARibbonCategoryLayout();
 
+    /// Get the parent SARibbonCategory
     SARibbonCategory* ribbonCategory() const;
 
+    /// Add a layout item (overridden from QLayout)
     virtual void addItem(QLayoutItem* item) override;
+    /// Get the layout item at the specified index (overridden from QLayout)
     virtual QLayoutItem* itemAt(int index) const override;
+    /// Take the layout item at the specified index (overridden from QLayout)
     virtual QLayoutItem* takeAt(int index) override;
-    SARibbonCategoryLayoutItem* takePannelItem(int index);
-    SARibbonCategoryLayoutItem* takePannelItem(SARibbonPannel* pannel);
-    bool takePannel(SARibbonPannel* pannel);
+    /// Take the panel item at the specified index
+    SARibbonCategoryLayoutItem* takePanelItem(int index);
+    /// Take the panel item for the specified panel
+    SARibbonCategoryLayoutItem* takePanelItem(SARibbonPanel* panel);
+    /// Remove a panel and its separator
+    bool takePanel(SARibbonPanel* panel);
+    /// Get the number of layout items (overridden from QLayout)
     virtual int count() const override;
+    /// Set the geometry of the layout (overridden from QLayout)
     void setGeometry(const QRect& rect) override;
+    /// Get the size hint of the layout (overridden from QLayout)
     QSize sizeHint() const override;
+    /// Get the minimum size of the layout (overridden from QLayout)
     QSize minimumSize() const override;
+    /// Get the expanding directions of the layout (overridden from QLayout)
     Qt::Orientations expandingDirections() const override;
+    /// Invalidate the layout (overridden from QLayout)
     void invalidate() override;
-    // 追加一个pannel
-    void addPannel(SARibbonPannel* pannel);
-    // 插入一个pannel
-    void insertPannel(int index, SARibbonPannel* pannel);
-    //
+    /// Add a panel to the layout
+    void addPanel(SARibbonPanel* panel);
+    /// Insert a panel at the specified index
+    void insertPanel(int index, SARibbonPanel* panel);
+    /// Get the content size of the category
     QSize categoryContentSize() const;
-    // 更新尺寸
+    /// Update geometry of the layout
     void updateGeometryArr();
 
-    // 执行位置调整
+    /// Execute layout adjustment
     void doLayout();
 
-    // 返回所有pannels
-    QList< SARibbonPannel* > pannels() const;
+    /// Get all panels in the layout
+    QList< SARibbonPanel* > panels() const;
 
-    // 通过obj name获取pannel
-    SARibbonPannel* pannelByObjectName(const QString& objname) const;
-    // 通过pannel name获取pannel
-    SARibbonPannel* pannelByName(const QString& pannelname) const;
-    // 通过索引找到pannel，如果超过索引范围，会返回nullptr
-    SARibbonPannel* pannelByIndex(int i) const;
-    // 移动pannel
-    void movePannel(int from, int to);
-    // pannel的数量
-    int pannelCount() const;
-    // pannel的索引
-    int pannelIndex(SARibbonPannel* p) const;
-    // 获取所有的pannel
-    QList< SARibbonPannel* > pannelList() const;
-    // 执行滚轮事件
+    /// Find a panel by its object name
+    SARibbonPanel* panelByObjectName(const QString& objname) const;
+    /// Find a panel by its name
+    SARibbonPanel* panelByName(const QString& panelname) const;
+    /// Find a panel by its index
+    SARibbonPanel* panelByIndex(int i) const;
+    /// Move a panel from one position to another
+    void movePanel(int from, int to);
+    /// Get the number of panels
+    int panelCount() const;
+    /// Find the index of a panel
+    int panelIndex(SARibbonPanel* p) const;
+    /// Get all panels in the layout
+    QList< SARibbonPanel* > panelList() const;
+    /// Execute scrolling
     void scroll(int px);
-    // 判断是否有滚动过
+    /// Scroll to a specified position
+    void scrollTo(int targetX);
+    /// Animate scrolling by a specified distance
+    void scrollByAnimate(int px);
+    /// Animate scrolling to a specified position
+    void scrollToByAnimate(int targetX);
+    /// Get the current scroll position
+    int scrollPosition() const;
+    /// Set the scroll position
+    void setScrollPosition(int pos);
+    /// Check if scrolling animation is in progress
+    bool isAnimatingScroll() const;
+    /// Check if the layout has been scrolled
     bool isScrolled() const;
-    // category的总宽度
+    /// Get the total width of the content
     int categoryTotalWidth() const;
-    // 设置Category的对齐方式
+    /// Set the alignment of the category
     void setCategoryAlignment(SARibbonAlignment al);
+    /// Get the alignment of the category
     SARibbonAlignment categoryAlignment() const;
+    /// Set the duration of the animation
+    void setAnimationDuration(int duration);
+    /// Get the duration of the animation
+    int animationDuration() const;
 private Q_SLOTS:
     void onLeftScrollButtonClicked();
     void onRightScrollButtonClicked();
+
+private:
+    void setupAnimateScroll();
 };
 
 /**
+ * \if ENGLISH
+ * @brief Layout item for SARibbonCategoryLayout
+ * @details This class is used to identify items in SARibbonCategoryLayout, including panels and their associated separators
+ * \endif
+ *
+ * \if CHINESE
  * @brief SARibbonCategoryLayoutItem，用于标识SARibbonCategoryLayout的item
+ * @details 此类用于标识 SARibbonCategoryLayout 中的项目，包括面板及其关联的分隔符
+ * \endif
  */
 class SA_RIBBON_EXPORT SARibbonCategoryLayoutItem : public QWidgetItem
 {
 public:
-    explicit SARibbonCategoryLayoutItem(SARibbonPannel* w);
+    /// Constructor for SARibbonCategoryLayoutItem
+    explicit SARibbonCategoryLayoutItem(SARibbonPanel* w);
+    /// Destructor for SARibbonCategoryLayoutItem
     ~SARibbonCategoryLayoutItem();
     SARibbonSeparatorWidget* separatorWidget;
-    // 把内部的widget转换为pannel
-    SARibbonPannel* toPannelWidget();
-    QRect mWillSetGeometry;           ///< pannel将要设置的Geometry
-    QRect mWillSetSeparatorGeometry;  ///< pannel将要设置的Separator的Geometry
+    /// Convert the internal widget to a SARibbonPanel
+    SARibbonPanel* toPanelWidget();
+    QRect mWillSetGeometry;           ///< panel将要设置的Geometry
+    QRect mWillSetSeparatorGeometry;  ///< panel将要设置的Separator的Geometry
 };
 #endif  // SARIBBONCATEGORYLAYOUT_H

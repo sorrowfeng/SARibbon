@@ -1,4 +1,4 @@
-﻿#include "SARibbonCtrlContainer.h"
+#include "SARibbonCtrlContainer.h"
 #include <QHBoxLayout>
 #include <QPainter>
 #include <QPaintEvent>
@@ -7,8 +7,17 @@
 #include <QLabel>
 #include <QApplication>
 #include <QScreen>
+#include "SARibbonUtil.h"
 /**
- * @brief The SARibbonCtrlContainerPrivate class
+ * \if ENGLISH
+ * @brief Private data class for SARibbonCtrlContainer
+ * @details This class holds private data for SARibbonCtrlContainer to implement the PIMPL idiom.
+ * \endif
+ *
+ * \if CHINESE
+ * @brief SARibbonCtrlContainerPrivate 类
+ * @details 此类持有 SARibbonCtrlContainer 的私有数据，实现 PIMPL 设计模式。
+ * \endif
  */
 class SARibbonCtrlContainer::PrivateData
 {
@@ -37,6 +46,17 @@ public:
         mHorizontalLayout->addWidget(mLabelText);
     }
 
+    /**
+     * \if ENGLISH
+     * @brief Set the container widget
+     * @param w Widget to set as container
+     * \endif
+     *
+     * \if CHINESE
+     * @brief 设置容器窗口
+     * @param w 要设置为容器的窗口
+     * \endif
+     */
     void setContainerWidget(QWidget* w)
     {
         if (mContainerWidget) {
@@ -60,6 +80,17 @@ public:
         w->setSizePolicy(sizePolicy);
     }
 
+    /**
+     * \if ENGLISH
+     * @brief Take the container widget from layout
+     * @param w Widget to remove from layout
+     * \endif
+     *
+     * \if CHINESE
+     * @brief 从布局中移除容器窗口
+     * @param w 要从布局中移除的窗口
+     * \endif
+     */
     void takeContainerWidget(QWidget* w)
     {
         int i = mHorizontalLayout->indexOf(w);
@@ -103,8 +134,15 @@ void SARibbonCtrlContainer::setEnableShowTitle(bool b)
 }
 
 /**
+ * \if ENGLISH
+ * @brief Check if container widget exists
+ * @return true if container widget exists
+ * \endif
+ *
+ * \if CHINESE
  * @brief 判断是否存在容器窗口
- * @return
+ * @return 如果容器窗口存在返回true
+ * \endif
  */
 bool SARibbonCtrlContainer::hasContainerWidget() const
 {
@@ -112,13 +150,21 @@ bool SARibbonCtrlContainer::hasContainerWidget() const
 }
 
 /**
+ * \if ENGLISH
+ * @brief Set the icon
+ * @param i Icon to set
+ * \endif
+ *
+ * \if CHINESE
  * @brief 设置图标
- * @param i
+ * @param i 要设置的图标
+ * \endif
  */
 void SARibbonCtrlContainer::setIcon(const QIcon& i)
 {
-    d_ptr->mIcon   = i;
-    QPixmap pixmap = i.pixmap(d_ptr->mIconSize);
+    d_ptr->mIcon = i;
+    // QPixmap pixmap = i.pixmap(d_ptr->mIconSize);
+    QPixmap pixmap = SA::iconToPixmap(i, d_ptr->mIconSize, SA::widgetDevicePixelRatio(this));
     d_ptr->mLabelPixmap->setPixmap(pixmap);
 }
 
@@ -128,8 +174,15 @@ void SARibbonCtrlContainer::setIcon(const QPixmap& pixmap)
 }
 
 /**
+ * \if ENGLISH
+ * @brief Get the icon
+ * @return Current icon
+ * \endif
+ *
+ * \if CHINESE
  * @brief 获取图标
- * @return
+ * @return 当前图标
+ * \endif
  */
 QIcon SARibbonCtrlContainer::icon() const
 {
@@ -137,8 +190,15 @@ QIcon SARibbonCtrlContainer::icon() const
 }
 
 /**
+ * \if ENGLISH
+ * @brief Set the text
+ * @param t Text to set
+ * \endif
+ *
+ * \if CHINESE
  * @brief 设置文字
- * @param t
+ * @param t 要设置的文字
+ * \endif
  */
 void SARibbonCtrlContainer::setText(const QString& t)
 {
@@ -146,8 +206,15 @@ void SARibbonCtrlContainer::setText(const QString& t)
 }
 
 /**
+ * \if ENGLISH
+ * @brief Get the text
+ * @return Current text
+ * \endif
+ *
+ * \if CHINESE
  * @brief 获取文字
- * @return
+ * @return 当前文字
+ * \endif
  */
 QString SARibbonCtrlContainer::text() const
 {
@@ -160,8 +227,15 @@ void SARibbonCtrlContainer::setContainerWidget(QWidget* w)
 }
 
 /**
+ * \if ENGLISH
+ * @brief Get the widget displaying the icon
+ * @return Widget displaying the icon
+ * \endif
+ *
+ * \if CHINESE
  * @brief 获取显示icon的窗口
- * @return
+ * @return 显示图标的窗口
+ * \endif
  */
 QWidget* SARibbonCtrlContainer::iconWidget() const
 {

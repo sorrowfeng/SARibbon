@@ -1,4 +1,4 @@
-﻿cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.15)
 
 project(StaticExample LANGUAGES CXX)
 
@@ -25,7 +25,7 @@ option(SARIBBON_USE_FRAMELESS_LIB "Using the QWindowKit library as a frameless s
 #endif()
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg REQUIRED)
 
 
 # 注意后面所有SARIBBON_USE_FRAMELESS_LIB的判断，都是和framelss有关
@@ -85,7 +85,7 @@ endif()
 if(WIN32)
     set_target_properties(StaticExample PROPERTIES WIN32_EXECUTABLE TRUE)
 endif()
-target_link_libraries(StaticExample PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(StaticExample PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Svg)
 target_include_directories(StaticExample PUBLIC
     $<INSTALL_INTERFACE:include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
@@ -105,4 +105,15 @@ if(SARIBBON_USE_FRAMELESS_LIB)
 else()
     #不使用frameless必须设置SARIBBON_USE_3RDPARTY_FRAMELESSHELPER宏为0
     target_compile_definitions(StaticExample PRIVATE SARIBBON_USE_3RDPARTY_FRAMELESSHELPER=0)
+endif()
+
+include(GNUInstallDirs)
+install(TARGETS StaticExample
+    BUNDLE DESTINATION .
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+if(QT_VERSION_MAJOR EQUAL 6)
+    qt_finalize_executable(StaticExample)
 endif()

@@ -1,42 +1,116 @@
-﻿#include "SARibbonTabBar.h"
+#include "SARibbonTabBar.h"
 #include <QStyleOptionTab>
 #include <QFontMetrics>
 
+/**
+ * \if ENGLISH
+ * @brief Constructs a SARibbonTabBar instance
+ * @param parent Parent widget
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 构造一个 SARibbonTabBar 实例
+ * @param parent 父窗口部件
+ * \endif
+ */
 SARibbonTabBar::SARibbonTabBar(QWidget* parent) : QTabBar(parent), m_tabMargin(6, 0, 0, 0)
 {
 	setExpanding(false);
 }
 
+/**
+ * \if ENGLISH
+ * @brief Destructor
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 析构函数
+ * \endif
+ */
 SARibbonTabBar::~SARibbonTabBar()
 {
 }
 
+/**
+ * \if ENGLISH
+ * @brief Gets the tab margin
+ * @return The tab margin
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取tab边距
+ * @return tab边距
+ * \endif
+ */
 const QMargins& SARibbonTabBar::tabMargin() const
 {
 	return (m_tabMargin);
 }
 
+/**
+ * \if ENGLISH
+ * @brief Sets the tab margin
+ * @param tabMargin The tab margin to set
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 设置tab边距
+ * @param tabMargin 要设置的tab边距
+ * \endif
+ */
 void SARibbonTabBar::setTabMargin(const QMargins& tabMargin)
 {
 	m_tabMargin = tabMargin;
 }
 
+/**
+ * \if ENGLISH
+ * @brief Set the tab item height
+ * @param height The tab item height, 0 means using the default tabbar height
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 设置tab项的高度
+ * @param height tab项高度，0表示使用tabbar默认高度
+ * \endif
+ */
 void SARibbonTabBar::setTabItemHeight(int height)
 {
 	mTabItemHeight = qMax(0, height);
 }
 
+/**
+ * \if ENGLISH
+ * @brief Get the tab item height
+ * @return The tab item height
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取tab项的高度
+ * @return tab项高度
+ * \endif
+ */
 int SARibbonTabBar::tabItemHeight() const
 {
 	return mTabItemHeight;
 }
 
 /**
+ * \if ENGLISH
+ * @brief Estimates the size of a tab
+ *
+ * Unlike the system default tabbar, SARibbonTabBar's tab height is the same as the tabbar height, and does not consider vertical distribution
+ * @param index The index of the tab
+ * @return The estimated size of the tab
+ * \endif
+ *
+ * \if CHINESE
  * @brief tab的尺寸预估
  *
  * 有别于系统默认的tabbar，SARibbonTabBar的tab高度和tabbar高度一致，且不考虑纵向分布情况
- * @param index
- * @return
+ * @param index tab的索引
+ * @return tab的预估尺寸
+ * \endif
  */
 QSize SARibbonTabBar::tabSizeHint(int index) const
 {
@@ -68,5 +142,5 @@ QSize SARibbonTabBar::tabSizeHint(int index) const
 	if (mTabItemHeight > 0) {
 		hint.setHeight(tabItemHeight);
 	}
-    return hint;
+	return hint;
 }
