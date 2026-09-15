@@ -109,6 +109,13 @@ public:
     void setPreferredColumnCount(int columns);
     /// Get the preferred column count, 0 means the width is not constrained
     int preferredColumnCount() const;
+    /// Set a lower bound for the item grid width (0 = derive it from the content).
+    /// Give several side-by-side galleries the same value to align their grid size.
+    void setPreferredGridWidth(int width);
+    /// Get the grid width lower bound, 0 means it is derived from the content
+    int preferredGridWidth() const;
+    /// Get the grid width the current content needs to be fully displayed, -1 if unknown
+    int contentGridWidth() const;
     /// Get the size hint, the width respects preferredColumnCount()
     QSize sizeHint() const override;
 Q_SIGNALS:

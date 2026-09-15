@@ -38,6 +38,7 @@ public:
     QBoxLayout* mLayout { nullptr };
     bool mSingleRowMode { false };
     int mPreferredColumnCount { 0 };  ///< 期望刚好容纳的列数, 0为不限制
+    int mPreferredGridWidth { 0 };    ///< 格宽下限, 0为完全按内容计算(用于让多个图库的格子尺寸一致)
     PrivateData(SARibbonGallery* p) : q_ptr(p)
     {
     }
@@ -168,7 +169,9 @@ public:
         }
         // 格子宽度默认跟随高度, 这里改为由内容决定: 既保证条目文字完整显示,
         // 也让总宽度可预测(不受布局高度影响)
-        const int gridW = contentMinGridWidth();
+        // 若调用方用setPreferredGridWidth指定了统一下限, 则不低于该值,
+        // 这样并列的多个图库可以取到完全一致的格子尺寸
+        const int gridW = qMax(contentMinGridWidth(), mPreferredGridWidth);
         if (gridW > 0 && (mCurrentViewportGroup->gridMinimumWidth() != gridW
                           || mCurrentViewportGroup->gridMaximumWidth() != gridW)) {
             mCurrentViewportGroup->setGridMinimumWidth(gridW);
@@ -731,6 +734,65 @@ void SARibbonGallery::setPreferredColumnCount(int columns)
 int SARibbonGallery::preferredColumnCount() const
 {
     return d_ptr->mPreferredColumnCount;
+}
+
+/**
+ * \if ENGLISH
+ * @brief Set a lower bound for the item grid width (0 = derive it from the content)
+ * @param width Lower bound of the grid width in pixels
+ * @note Several galleries placed side by side can be aligned by giving them the same
+ *       value, so their items share exactly the same grid size.
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 设置格子宽度的下限（传0表示完全按内容计算）
+ * @param width 格子宽度的下限，单位像素
+ * @note 并排的多个图库传入同一个值即可让它们的格子尺寸完全一致。
+ * \endif
+ */
+void SARibbonGallery::setPreferredGridWidth(int width)
+{
+    if (width < 0) {
+        width = 0;
+    }
+    if (d_ptr->mPreferredGridWidth == width) {
+        return;
+    }
+    d_ptr->mPreferredGridWidth = width;
+    d_ptr->applyPreferredWidth();
+    updateGeometry();
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the lower bound of the item grid width, 0 means it is derived from the content
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取格子宽度的下限，0表示完全由内容决定
+ * \endif
+ */
+int SARibbonGallery::preferredGridWidth() const
+{
+    return d_ptr->mPreferredGridWidth;
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the grid width the current content needs to be fully displayed
+ * @return Required grid width, -1 when it cannot be determined yet
+ * @note Use it together with setPreferredGridWidth() to align several galleries.
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取当前内容完整显示所需的格宽
+ * @return 所需格宽，暂时无法确定时返回-1
+ * @note 配合setPreferredGridWidth()使用，可让多个图库的格子尺寸保持一致。
+ * \endif
+ */
+int SARibbonGallery::contentGridWidth() const
+{
+    return d_ptr->contentMinGridWidth();
 }
 
 /**
