@@ -8,6 +8,12 @@
 #include <QPointer>
 class SARibbonGalleryGroup;
 
+// 条目选中态的数据角色
+// 不用Qt::CheckStateRole是因为标准delegate会据此额外画一个复选框，这里只要高亮效果
+#ifndef SA_GalleryItemRole_Checked
+#define SA_GalleryItemRole_Checked (Qt::UserRole + 1)
+#endif
+
 /**
  * \if ENGLISH
  * @brief GalleryItem similar to QStandardItem
