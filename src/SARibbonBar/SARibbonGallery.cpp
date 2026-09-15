@@ -4,6 +4,7 @@
 #include <QResizeEvent>
 #include <QDebug>
 #include <QVBoxLayout>
+#include <QFontMetrics>
 #include <QScrollBar>
 #include <QLabel>
 #include <QSizeGrip>
@@ -36,6 +37,7 @@ public:
     QBoxLayout* mButtonLayout { nullptr };
     QBoxLayout* mLayout { nullptr };
     bool mSingleRowMode { false };
+    int mPreferredColumnCount { 0 };  ///< 期望刚好容纳的列数, 0为不限制
     PrivateData(SARibbonGallery* p) : q_ptr(p)
     {
     }
@@ -112,6 +114,76 @@ public:
         mCurrentViewportGroup->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
         mCurrentViewportGroup->setModel(v->model());
         mCurrentViewportGroup->show();
+    }
+
+    // 计算恰好容纳columns列条目时gallery应有的宽度, 无法确定时返回-1
+    int widthForColumnCount(int columns) const
+    {
+        if (columns <= 0 || nullptr == mCurrentViewportGroup) {
+            return -1;
+        }
+        const QSize gs = mCurrentViewportGroup->gridSize();
+        if (gs.width() <= 0) {
+            return -1;
+        }
+        const int sp  = mCurrentViewportGroup->spacing();
+        const int btn = mButtonLayout ? mButtonLayout->sizeHint().width() : 0;
+        const int fw  = q_ptr->frameWidth();
+        // 相邻条目之间插入一个spacing, 末尾再留一个, 最后补2px避免刚好触发滚动条
+        return columns * (gs.width() + sp) + sp + btn + 2 * fw + 2;
+    }
+
+    // 完整显示条目文字所需的最小格宽, 无法确定时返回-1
+    int contentMinGridWidth() const
+    {
+        if (nullptr == mCurrentViewportGroup) {
+            return -1;
+        }
+        SARibbonGalleryGroupModel* model = mCurrentViewportGroup->groupModel();
+        if (nullptr == model) {
+            return -1;
+        }
+        const int cnt = model->rowCount(QModelIndex());
+        if (cnt <= 0) {
+            return -1;
+        }
+        const QFontMetrics fm(mCurrentViewportGroup->font());
+        int textWidth = 0;
+        for (int r = 0; r < cnt; ++r) {
+            const QString t = model->data(model->index(r, 0, QModelIndex()), Qt::DisplayRole).toString();
+            textWidth        = qMax(textWidth, fm.horizontalAdvance(t));
+        }
+        if (textWidth <= 0) {
+            return -1;
+        }
+        // 文字宽度 + 左右内边距, 再留一点余量避免恰好被省略号截断
+        return textWidth + 2 * mCurrentViewportGroup->spacing() + 16;
+    }
+
+    // 依据mPreferredColumnCount把宽度收敛到刚好容纳对应列数
+    void applyPreferredWidth()
+    {
+        if (mPreferredColumnCount <= 0 || nullptr == mCurrentViewportGroup) {
+            return;
+        }
+        // 格子宽度默认跟随高度, 这里改为由内容决定: 既保证条目文字完整显示,
+        // 也让总宽度可预测(不受布局高度影响)
+        const int gridW = contentMinGridWidth();
+        if (gridW > 0 && (mCurrentViewportGroup->gridMinimumWidth() != gridW
+                          || mCurrentViewportGroup->gridMaximumWidth() != gridW)) {
+            mCurrentViewportGroup->setGridMinimumWidth(gridW);
+            mCurrentViewportGroup->setGridMaximumWidth(gridW);
+            mCurrentViewportGroup->recalcGridSize();
+        }
+
+        const int want = widthForColumnCount(mPreferredColumnCount);
+        if (want <= 0) {
+            return;
+        }
+        if (q_ptr->minimumWidth() == want && q_ptr->maximumWidth() == want) {
+            return;
+        }
+        q_ptr->setFixedWidth(want);
     }
 };
 
@@ -622,6 +694,70 @@ bool SARibbonGallery::isSingleRowMode() const
 }
 
 /**
+ * \if ENGLISH
+ * @brief Limit the gallery width to exactly fit the given number of item columns
+ * @param columns Column count, 0 restores the automatic width
+ * @note Intended for galleries holding a fixed set of options, so the width neither
+ *       stretches with the panel nor cuts trailing items off.
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 把图库宽度限制为恰好容纳给定数量的条目列
+ * @param columns 列数，传0恢复自动宽度
+ * @note 适合条目数量固定的场景，宽度既不会被拉伸，也不会把末尾的条目裁掉。
+ * \endif
+ */
+void SARibbonGallery::setPreferredColumnCount(int columns)
+{
+    if (columns < 0) {
+        columns = 0;
+    }
+    d_ptr->mPreferredColumnCount = columns;
+    d_ptr->applyPreferredWidth();
+    updateGeometry();
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the preferred column count
+ * @return Column count, 0 means the width is not constrained
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取期望的列数
+ * @return 列数，0表示不限制宽度
+ * \endif
+ */
+int SARibbonGallery::preferredColumnCount() const
+{
+    return d_ptr->mPreferredColumnCount;
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the size hint, the width respects preferredColumnCount()
+ * @return Size hint
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取尺寸提示，宽度遵循preferredColumnCount()
+ * @return 尺寸提示
+ * \endif
+ */
+QSize SARibbonGallery::sizeHint() const
+{
+    const QSize base = QFrame::sizeHint();
+    if (d_ptr->mPreferredColumnCount <= 0) {
+        return base;
+    }
+    const int w = d_ptr->widthForColumnCount(d_ptr->mPreferredColumnCount);
+    if (w <= 0) {
+        return base;
+    }
+    return QSize(w, base.height());
+}
+
+/**
  * @brief 上翻页
  */
 /**
@@ -810,6 +946,8 @@ void SARibbonGallery::resizeEvent(QResizeEvent* event)
             group->recalcGridSize(h);
         }
     }
+    // gridSize此时已按真实高度更新, 收敛到刚好容纳设定列数的宽度
+    d_ptr->applyPreferredWidth();
 }
 
 /**

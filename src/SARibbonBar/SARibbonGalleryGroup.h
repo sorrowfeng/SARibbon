@@ -166,6 +166,10 @@ public:
     int gridMaximumWidth() const;
     /// Get action group
     QActionGroup* actionGroup() const;
+    /// Get the currently checked action, nullptr if no action is checked
+    QAction* checkedAction() const;
+    /// Check the given action so it is painted as highlighted, nullptr clears the checked state
+    void setCheckedAction(QAction* act);
     /// Get grid row count
     int gridRowCount() const;
     /// Get grid column count
@@ -226,6 +230,10 @@ Q_SIGNALS:
 private:
     /// Setup group model
     SARibbonGalleryGroupModel* setupGroupModel();
+    /// Keep the item checked state in sync with its action
+    void watchActionChecked(QAction* act);
+    /// Repaint all items so checked state changes take effect
+    void refreshCheckedItems();
 };
 
 #endif  // SARIBBONGALLERYGROUP_H

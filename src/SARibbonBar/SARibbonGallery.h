@@ -105,6 +105,12 @@ public:
     void setSingleRowMode(bool on);
     /// Check if gallery is in single-row mode
     bool isSingleRowMode() const;
+    /// Limit the gallery width to exactly fit the given number of item columns (0 = automatic)
+    void setPreferredColumnCount(int columns);
+    /// Get the preferred column count, 0 means the width is not constrained
+    int preferredColumnCount() const;
+    /// Get the size hint, the width respects preferredColumnCount()
+    QSize sizeHint() const override;
 Q_SIGNALS:
     /**
      * \if ENGLISH

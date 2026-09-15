@@ -82,18 +82,38 @@ void SARibbonGalleryGroupItemDelegate::paint(QPainter* painter, const QStyleOpti
     if (nullptr == mGroup) {
         return;
     }
+    // 被checked的item即为当前生效项, 用浅色底表示选中(Office风格: 只铺底色, 不画描边)
+    const bool isChecked = (index.data(SA_GalleryItemRole_Checked).toInt() == Qt::Checked);
+    QStyleOptionViewItem opt = option;
+    // 去掉焦点框: 点击命中的项会带焦点框, 而程序化同步的项没有, 统一成一种样式
+    opt.state &= ~QStyle::State_HasFocus;
+    if (isChecked) {
+        // 选中底色完全由下面自己画, 因此屏蔽样式里的 item:selected;
+        // 同时屏蔽 item:hover, 否则鼠标悬停在选中项上时会被 hover 灰(#e0e0e0)盖住浅蓝底
+        opt.state &= ~QStyle::State_Selected;
+        opt.state &= ~QStyle::State_MouseOver;
+        // 用Highlight按约1/4不透明度叠加出浅色底: 随主题取色, 且比QSS的选中色明显
+        QColor fill = opt.palette.color(QPalette::Highlight);
+        fill.setAlpha(64);
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing, true);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(fill);
+        painter->drawRoundedRect(QRectF(option.rect).adjusted(1, 1, -1, -1), 3, 3);
+        painter->restore();
+    }
     switch (mGroup->galleryGroupStyle()) {
     case SARibbonGalleryGroup::IconWithText:
-        paintIconWithText(painter, option, index);
+        paintIconWithText(painter, opt, index);
         break;
     case SARibbonGalleryGroup::IconWithWordWrapText:
-        paintIconWithTextWordWrap(painter, option, index);
+        paintIconWithTextWordWrap(painter, opt, index);
         break;
     case SARibbonGalleryGroup::IconOnly:
-        paintIconOnly(painter, option, index);
+        paintIconOnly(painter, opt, index);
         break;
     default:
-        paintIconWithText(painter, option, index);
+        paintIconWithText(painter, opt, index);
         break;
     }
 }
@@ -719,6 +739,7 @@ void SARibbonGalleryGroup::addActionItem(QAction* act)
     }
     d_ptr->mActionGroup->addAction(act);
     groupModel()->append(new SARibbonGalleryItem(act));
+    watchActionChecked(act);
 }
 
 /**
@@ -741,6 +762,7 @@ void SARibbonGalleryGroup::addActionItemList(const QList< QAction* >& acts)
     }
     for (QAction* a : acts) {
         d_ptr->mActionGroup->addAction(a);
+        watchActionChecked(a);
     }
     for (int i = 0; i < acts.size(); ++i) {
         model->append(new SARibbonGalleryItem(acts[ i ]));
@@ -978,6 +1000,100 @@ QActionGroup* SARibbonGalleryGroup::actionGroup() const
 
 /**
  * \if ENGLISH
+ * @brief Get the currently checked action
+ * @return Checked action pointer, or nullptr if no action is checked
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取当前处于选中态的action
+ * @return 选中的action指针，没有action被选中时返回nullptr
+ * \endif
+ */
+QAction* SARibbonGalleryGroup::checkedAction() const
+{
+    return (d_ptr->mActionGroup ? d_ptr->mActionGroup->checkedAction() : nullptr);
+}
+
+/**
+ * \if ENGLISH
+ * @brief Check an action so its item is painted as highlighted
+ * @param act Action to check, nullptr clears the current checked state
+ * @note The action is made checkable automatically. The internal QActionGroup is exclusive,
+ *       so the previously checked action is unchecked.
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 选中一个action，使其条目以高亮方式绘制
+ * @param act 要选中的action，传nullptr则清除当前选中
+ * @note 会自动把action设为checkable。内部QActionGroup是互斥的，原来的选中项会被取消。
+ * \endif
+ */
+void SARibbonGalleryGroup::setCheckedAction(QAction* act)
+{
+    if (nullptr == d_ptr->mActionGroup) {
+        return;
+    }
+    const QList< QAction* > acts = d_ptr->mActionGroup->actions();
+    if (nullptr == act) {
+        for (QAction* a : acts) {
+            if (a) {
+                a->setChecked(false);
+            }
+        }
+        refreshCheckedItems();
+        return;
+    }
+    if (!acts.contains(act)) {
+        return;
+    }
+    act->setCheckable(true);
+    act->setChecked(true);
+    refreshCheckedItems();
+}
+
+/**
+ * \if ENGLISH
+ * @brief Keep the checked state of the item in sync with its action
+ * @param act Action to watch
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 让条目的选中态跟随其action变化
+ * @param act 需要监听的action
+ * \endif
+ */
+void SARibbonGalleryGroup::watchActionChecked(QAction* act)
+{
+    if (nullptr == act) {
+        return;
+    }
+    connect(act, &QAction::toggled, this, [ this ](bool) { refreshCheckedItems(); });
+}
+
+/**
+ * \if ENGLISH
+ * @brief Repaint all items so checked state changes take effect
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 刷新所有条目，使选中态变化生效
+ * \endif
+ */
+void SARibbonGalleryGroup::refreshCheckedItems()
+{
+    SARibbonGalleryGroupModel* m = groupModel();
+    if (nullptr == m) {
+        return;
+    }
+    const int cnt = m->rowCount(QModelIndex());
+    if (cnt <= 0) {
+        return;
+    }
+    Q_EMIT m->dataChanged(m->index(0, 0, QModelIndex()), m->index(cnt - 1, 0, QModelIndex()), { SA_GalleryItemRole_Checked });
+}
+
+/**
+ * \if ENGLISH
  * @brief Calculate grid row count
  * @return Row count
  * \endif
@@ -1111,7 +1227,13 @@ void SARibbonGalleryGroup::onItemClicked(const QModelIndex& index)
         if (item) {
             QAction* act = item->action();
             if (act) {
+                const bool isCheckable = act->isCheckable();
                 act->activate(QAction::Trigger);
+                // activate()会翻转checkable action的选中态，这里固定回选中，
+                // 使重复点击当前项不会取消高亮（取消其它项由互斥的QActionGroup负责）
+                if (isCheckable) {
+                    act->setChecked(true);
+                }
             }
         }
     }

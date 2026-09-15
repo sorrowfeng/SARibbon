@@ -108,6 +108,13 @@ QVariant SARibbonGalleryItem::data(int role) const
 
         case Qt::DecorationRole:
             return (mAction->icon());
+
+        // checkable的action把选中态暴露给视图，供绘制"当前生效项"的高亮
+        case SA_GalleryItemRole_Checked:
+            if (mAction->isCheckable()) {
+                return (mAction->isChecked() ? Qt::Checked : Qt::Unchecked);
+            }
+            break;
         default:
             break;
         }
