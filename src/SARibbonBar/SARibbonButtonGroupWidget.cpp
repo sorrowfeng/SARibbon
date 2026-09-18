@@ -29,6 +29,17 @@ SARibbonButtonGroupWidget::~SARibbonButtonGroupWidget()
 {
 }
 
+void SARibbonButtonGroupWidget::paintEvent(QPaintEvent* event)
+{
+#ifdef Q_OS_MACOS
+    // macOS:QToolBar 基类会在 CE_ToolBar 里绘制平台风格的边框/分隔竖线,
+    // QSS 的 border:none 无法屏蔽,这里跳过基类绘制(按钮自身仍正常绘制)。
+    Q_UNUSED(event);
+#else
+    QToolBar::paintEvent(event);
+#endif
+}
+
 /**
  * \if ENGLISH
  * @brief Add a menu QAction to the button group widget
