@@ -28,6 +28,9 @@ public:
     void addMenuAction(QAction* menuAction, QToolButton::ToolButtonPopupMode popupMode = QToolButton::InstantPopup);
     /// Create and add a menu action to the button group widget
     QAction* addMenuAction(QMenu* menu, QToolButton::ToolButtonPopupMode popupMode = QToolButton::InstantPopup);
+
+protected:
+    void paintEvent(QPaintEvent* event) override;
 };
 
 #endif  // SARIBBONBUTTONGROUPWIDGET_H
