@@ -409,6 +409,9 @@ enum class SARibbonTheme
 	RibbonThemeOffice2021Dark,   ///< Office 2021 - Dark theme
 	RibbonThemeDark,             ///< Dark theme
 	RibbonThemeDark2,            ///< Dark theme 2
+	RibbonThemeFluentUILight,    ///< Fluent UI light theme
+	RibbonThemeFluentUIDark,     ///< Fluent UI dark theme
+	RibbonThemeModernBlue,       ///< Modern Blue theme
 	RibbonThemeUserDefine = 1000
 };
 Q_DECLARE_METATYPE(SARibbonTheme)
@@ -2268,6 +2271,9 @@ public:
 	void addMenuAction(QAction* menuAction, QToolButton::ToolButtonPopupMode popupMode = QToolButton::InstantPopup);
 	// Create and add a menu action to the button group widget
 	QAction* addMenuAction(QMenu* menu, QToolButton::ToolButtonPopupMode popupMode = QToolButton::InstantPopup);
+
+protected:
+	void paintEvent(QPaintEvent* event) override;
 };
 
 #endif  // SARIBBONBUTTONGROUPWIDGET_H
@@ -4058,6 +4064,12 @@ protected:
 #include <QPointer>
 class SARibbonGalleryGroup;
 
+// 条目选中态的数据角色
+// 不用Qt::CheckStateRole是因为标准delegate会据此额外画一个复选框，这里只要高亮效果
+#ifndef SA_GalleryItemRole_Checked
+#define SA_GalleryItemRole_Checked (Qt::UserRole + 1)
+#endif
+
 /**
  * \if ENGLISH
  * @brief GalleryItem similar to QStandardItem
@@ -4306,7 +4318,11 @@ public:
 	int gridMaximumWidth() const;
 	// Get action group
 	QActionGroup* actionGroup() const;
-	// Get grid row count
+	/// Get the currently checked action, nullptr if no action is checked
+	QAction* checkedAction() const;
+	/// Check the given action so it is painted as highlighted, nullptr clears the checked state
+	void setCheckedAction(QAction* act);
+	/// Get grid row count
 	int gridRowCount() const;
 	// Get grid column count
 	int gridColumnCount() const;
@@ -4366,6 +4382,10 @@ Q_SIGNALS:
 private:
 	// Setup group model
 	SARibbonGalleryGroupModel* setupGroupModel();
+	/// Keep the item checked state in sync with its action
+	void watchActionChecked(QAction* act);
+	/// Repaint all items so checked state changes take effect
+	void refreshCheckedItems();
 };
 
 #endif  // SARIBBONGALLERYGROUP_H
@@ -4490,6 +4510,19 @@ public:
 	int stretchFactor() const;
 	// Set the horizontal stretch factor (0 keeps the legacy equal-share behavior; >0 joins weighted distribution)
 	void setStretchFactor(int factor);
+	/// Limit the gallery width to exactly fit the given number of item columns (0 = automatic)
+	void setPreferredColumnCount(int columns);
+	/// Get the preferred column count, 0 means the width is not constrained
+	int preferredColumnCount() const;
+	/// Set a lower bound for the item grid width (0 = derive it from the content).
+	/// Give several side-by-side galleries the same value to align their grid size.
+	void setPreferredGridWidth(int width);
+	/// Get the grid width lower bound, 0 means it is derived from the content
+	int preferredGridWidth() const;
+	/// Get the grid width the current content needs to be fully displayed, -1 if unknown
+	int contentGridWidth() const;
+	/// Get the size hint, the width respects preferredColumnCount()
+	QSize sizeHint() const override;
 Q_SIGNALS:
 	/**
 	 * \if ENGLISH

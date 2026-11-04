@@ -6491,6 +6491,12 @@ static QString themeToTemplatePath(SARibbonTheme theme)
 		return ":/SARibbonTheme/resource/templates/win7.qss";
 	case SARibbonTheme::RibbonThemeOffice2013:
 		return ":/SARibbonTheme/resource/templates/office2013.qss";
+	case SARibbonTheme::RibbonThemeFluentUILight:
+		return ":/SARibbonTheme/resource/theme-fluent-ui-light.qss";
+	case SARibbonTheme::RibbonThemeFluentUIDark:
+		return ":/SARibbonTheme/resource/theme-fluent-ui-dark.qss";
+	case SARibbonTheme::RibbonThemeModernBlue:
+		return ":/SARibbonTheme/resource/theme-modern-blue.qss";
 	default:
 		return QString();
 	}
@@ -6573,14 +6579,17 @@ void applyRibbonTheme(QWidget* w, SARibbonBar* bar, SARibbonTheme theme,
 {
 	// If palette is provided and a template exists, use template-based approach
 	QString templatePath = themeToTemplatePath(theme);
-	if (palette.variables().size() > 0 && !templatePath.isEmpty() && w) {
+	if (!templatePath.isEmpty() && w) {
 		QString baseQss = loadResourceText(":/SARibbonTheme/resource/theme-base.qss");
 
 		// Load the QSS template
 		QString templateQss = loadResourceText(templatePath);
 		if (!templateQss.isEmpty()) {
 			// Replace {{token}} placeholders with palette colors
-			QString processedQss = SA::replaceQssTokens(templateQss, palette);
+			// 没有调色板时模板即完整样式表，直接使用（不做 token 替换）
+			QString processedQss = palette.variables().size() > 0
+									   ? SA::replaceQssTokens(templateQss, palette)
+									   : templateQss;
 			w->setStyleSheet(baseQss + "\n" + processedQss);
 		} else {
 			// Template file not found, fall back to base QSS
@@ -12289,6 +12298,17 @@ SARibbonButtonGroupWidget::SARibbonButtonGroupWidget(QWidget* parent) : QToolBar
 
 SARibbonButtonGroupWidget::~SARibbonButtonGroupWidget()
 {
+}
+
+void SARibbonButtonGroupWidget::paintEvent(QPaintEvent* event)
+{
+#ifdef Q_OS_MACOS
+	// macOS:QToolBar 基类会在 CE_ToolBar 里绘制平台风格的边框/分隔竖线,
+	// QSS 的 border:none 无法屏蔽,这里跳过基类绘制(按钮自身仍正常绘制)。
+	Q_UNUSED(event);
+#else
+	QToolBar::paintEvent(event);
+#endif
 }
 
 /**
@@ -21490,6 +21510,13 @@ QVariant SARibbonGalleryItem::data(int role) const
 
 		case Qt::DecorationRole:
 			return (mAction->icon());
+
+		// checkable的action把选中态暴露给视图，供绘制"当前生效项"的高亮
+		case SA_GalleryItemRole_Checked:
+			if (mAction->isCheckable()) {
+				return (mAction->isChecked() ? Qt::Checked : Qt::Unchecked);
+			}
+			break;
 		default:
 			break;
 		}
@@ -21878,18 +21905,38 @@ void SARibbonGalleryGroupItemDelegate::paint(QPainter* painter, const QStyleOpti
 	if (nullptr == mGroup) {
 		return;
 	}
+	// 被checked的item即为当前生效项, 用浅色底表示选中(Office风格: 只铺底色, 不画描边)
+	const bool isChecked = (index.data(SA_GalleryItemRole_Checked).toInt() == Qt::Checked);
+	QStyleOptionViewItem opt = option;
+	// 去掉焦点框: 点击命中的项会带焦点框, 而程序化同步的项没有, 统一成一种样式
+	opt.state &= ~QStyle::State_HasFocus;
+	if (isChecked) {
+		// 选中底色完全由下面自己画, 因此屏蔽样式里的 item:selected;
+		// 同时屏蔽 item:hover, 否则鼠标悬停在选中项上时会被 hover 灰(#e0e0e0)盖住浅蓝底
+		opt.state &= ~QStyle::State_Selected;
+		opt.state &= ~QStyle::State_MouseOver;
+		// 用Highlight按约1/4不透明度叠加出浅色底: 随主题取色, 且比QSS的选中色明显
+		QColor fill = opt.palette.color(QPalette::Highlight);
+		fill.setAlpha(64);
+		painter->save();
+		painter->setRenderHint(QPainter::Antialiasing, true);
+		painter->setPen(Qt::NoPen);
+		painter->setBrush(fill);
+		painter->drawRoundedRect(QRectF(option.rect).adjusted(1, 1, -1, -1), 3, 3);
+		painter->restore();
+	}
 	switch (mGroup->galleryGroupStyle()) {
 	case SARibbonGalleryGroup::IconWithText:
-		paintIconWithText(painter, option, index);
+		paintIconWithText(painter, opt, index);
 		break;
 	case SARibbonGalleryGroup::IconWithWordWrapText:
-		paintIconWithTextWordWrap(painter, option, index);
+		paintIconWithTextWordWrap(painter, opt, index);
 		break;
 	case SARibbonGalleryGroup::IconOnly:
-		paintIconOnly(painter, option, index);
+		paintIconOnly(painter, opt, index);
 		break;
 	default:
-		paintIconWithText(painter, option, index);
+		paintIconWithText(painter, opt, index);
 		break;
 	}
 }
@@ -22547,6 +22594,7 @@ void SARibbonGalleryGroup::addActionItem(QAction* act)
 	}
 	d_ptr->mActionGroup->addAction(act);
 	groupModel()->append(new SARibbonGalleryItem(act));
+	watchActionChecked(act);
 }
 
 /**
@@ -22569,6 +22617,7 @@ void SARibbonGalleryGroup::addActionItemList(const QList< QAction* >& acts)
 	}
 	for (QAction* a : acts) {
 		d_ptr->mActionGroup->addAction(a);
+		watchActionChecked(a);
 	}
 	// 批量创建GalleryItem，使用appendList一次性插入，避免逐项触发rowsInserted信号
 	QList< SARibbonGalleryItem* > items;
@@ -22810,6 +22859,100 @@ QActionGroup* SARibbonGalleryGroup::actionGroup() const
 
 /**
  * \if ENGLISH
+ * @brief Get the currently checked action
+ * @return Checked action pointer, or nullptr if no action is checked
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取当前处于选中态的action
+ * @return 选中的action指针，没有action被选中时返回nullptr
+ * \endif
+ */
+QAction* SARibbonGalleryGroup::checkedAction() const
+{
+	return (d_ptr->mActionGroup ? d_ptr->mActionGroup->checkedAction() : nullptr);
+}
+
+/**
+ * \if ENGLISH
+ * @brief Check an action so its item is painted as highlighted
+ * @param act Action to check, nullptr clears the current checked state
+ * @note The action is made checkable automatically. The internal QActionGroup is exclusive,
+ *       so the previously checked action is unchecked.
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 选中一个action，使其条目以高亮方式绘制
+ * @param act 要选中的action，传nullptr则清除当前选中
+ * @note 会自动把action设为checkable。内部QActionGroup是互斥的，原来的选中项会被取消。
+ * \endif
+ */
+void SARibbonGalleryGroup::setCheckedAction(QAction* act)
+{
+	if (nullptr == d_ptr->mActionGroup) {
+		return;
+	}
+	const QList< QAction* > acts = d_ptr->mActionGroup->actions();
+	if (nullptr == act) {
+		for (QAction* a : acts) {
+			if (a) {
+				a->setChecked(false);
+			}
+		}
+		refreshCheckedItems();
+		return;
+	}
+	if (!acts.contains(act)) {
+		return;
+	}
+	act->setCheckable(true);
+	act->setChecked(true);
+	refreshCheckedItems();
+}
+
+/**
+ * \if ENGLISH
+ * @brief Keep the checked state of the item in sync with its action
+ * @param act Action to watch
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 让条目的选中态跟随其action变化
+ * @param act 需要监听的action
+ * \endif
+ */
+void SARibbonGalleryGroup::watchActionChecked(QAction* act)
+{
+	if (nullptr == act) {
+		return;
+	}
+	connect(act, &QAction::toggled, this, [ this ](bool) { refreshCheckedItems(); });
+}
+
+/**
+ * \if ENGLISH
+ * @brief Repaint all items so checked state changes take effect
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 刷新所有条目，使选中态变化生效
+ * \endif
+ */
+void SARibbonGalleryGroup::refreshCheckedItems()
+{
+	SARibbonGalleryGroupModel* m = groupModel();
+	if (nullptr == m) {
+		return;
+	}
+	const int cnt = m->rowCount(QModelIndex());
+	if (cnt <= 0) {
+		return;
+	}
+	Q_EMIT m->dataChanged(m->index(0, 0, QModelIndex()), m->index(cnt - 1, 0, QModelIndex()), { SA_GalleryItemRole_Checked });
+}
+
+/**
+ * \if ENGLISH
  * @brief Calculate grid row count
  * @return Row count
  * \endif
@@ -22946,7 +23089,13 @@ void SARibbonGalleryGroup::onItemClicked(const QModelIndex& index)
 		if (item) {
 			QAction* act = item->action();
 			if (act) {
+				const bool isCheckable = act->isCheckable();
 				act->activate(QAction::Trigger);
+				// activate()会翻转checkable action的选中态，这里固定回选中，
+				// 使重复点击当前项不会取消高亮（取消其它项由互斥的QActionGroup负责）
+				if (isCheckable) {
+					act->setChecked(true);
+				}
 			}
 		}
 	}
@@ -22985,6 +23134,7 @@ void SARibbonGalleryGroup::onItemEntered(const QModelIndex& index)
 #include <QResizeEvent>
 #include <QDebug>
 #include <QVBoxLayout>
+#include <QFontMetrics>
 #include <QScrollBar>
 #include <QLabel>
 #include <QSizeGrip>
@@ -23015,6 +23165,8 @@ public:
 	QBoxLayout* mLayout { nullptr };
 	bool mSingleRowMode { false };
 	int mStretchFactor { 0 };  ///< 面板内水平拉伸系数，0 表示沿用既有均分行为
+	int mPreferredColumnCount { 0 };  ///< 期望刚好容纳的列数, 0为不限制
+	int mPreferredGridWidth { 0 };    ///< 格宽下限, 0为完全按内容计算(用于让多个图库的格子尺寸一致)
 	PrivateData(SARibbonGallery* p) : q_ptr(p)
 	{
 	}
@@ -23091,6 +23243,78 @@ public:
 		mCurrentViewportGroup->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		mCurrentViewportGroup->setModel(v->model());
 		mCurrentViewportGroup->show();
+	}
+
+	// 计算恰好容纳columns列条目时gallery应有的宽度, 无法确定时返回-1
+	int widthForColumnCount(int columns) const
+	{
+		if (columns <= 0 || nullptr == mCurrentViewportGroup) {
+			return -1;
+		}
+		const QSize gs = mCurrentViewportGroup->gridSize();
+		if (gs.width() <= 0) {
+			return -1;
+		}
+		const int sp  = mCurrentViewportGroup->spacing();
+		const int btn = mButtonLayout ? mButtonLayout->sizeHint().width() : 0;
+		const int fw  = q_ptr->frameWidth();
+		// 相邻条目之间插入一个spacing, 末尾再留一个, 最后补2px避免刚好触发滚动条
+		return columns * (gs.width() + sp) + sp + btn + 2 * fw + 2;
+	}
+
+	// 完整显示条目文字所需的最小格宽, 无法确定时返回-1
+	int contentMinGridWidth() const
+	{
+		if (nullptr == mCurrentViewportGroup) {
+			return -1;
+		}
+		SARibbonGalleryGroupModel* model = mCurrentViewportGroup->groupModel();
+		if (nullptr == model) {
+			return -1;
+		}
+		const int cnt = model->rowCount(QModelIndex());
+		if (cnt <= 0) {
+			return -1;
+		}
+		const QFontMetrics fm(mCurrentViewportGroup->font());
+		int textWidth = 0;
+		for (int r = 0; r < cnt; ++r) {
+			const QString t = model->data(model->index(r, 0, QModelIndex()), Qt::DisplayRole).toString();
+			textWidth        = qMax(textWidth, fm.horizontalAdvance(t));
+		}
+		if (textWidth <= 0) {
+			return -1;
+		}
+		// 文字宽度 + 左右内边距, 再留一点余量避免恰好被省略号截断
+		return textWidth + 2 * mCurrentViewportGroup->spacing() + 16;
+	}
+
+	// 依据mPreferredColumnCount把宽度收敛到刚好容纳对应列数
+	void applyPreferredWidth()
+	{
+		if (mPreferredColumnCount <= 0 || nullptr == mCurrentViewportGroup) {
+			return;
+		}
+		// 格子宽度默认跟随高度, 这里改为由内容决定: 既保证条目文字完整显示,
+		// 也让总宽度可预测(不受布局高度影响)
+		// 若调用方用setPreferredGridWidth指定了统一下限, 则不低于该值,
+		// 这样并列的多个图库可以取到完全一致的格子尺寸
+		const int gridW = qMax(contentMinGridWidth(), mPreferredGridWidth);
+		if (gridW > 0 && (mCurrentViewportGroup->gridMinimumWidth() != gridW
+						  || mCurrentViewportGroup->gridMaximumWidth() != gridW)) {
+			mCurrentViewportGroup->setGridMinimumWidth(gridW);
+			mCurrentViewportGroup->setGridMaximumWidth(gridW);
+			mCurrentViewportGroup->recalcGridSize();
+		}
+
+		const int want = widthForColumnCount(mPreferredColumnCount);
+		if (want <= 0) {
+			return;
+		}
+		if (q_ptr->minimumWidth() == want && q_ptr->maximumWidth() == want) {
+			return;
+		}
+		q_ptr->setFixedWidth(want);
 	}
 };
 
@@ -23676,6 +23900,129 @@ void SARibbonGallery::setStretchFactor(int factor)
 }
 
 /**
+ * \if ENGLISH
+ * @brief Limit the gallery width to exactly fit the given number of item columns
+ * @param columns Column count, 0 restores the automatic width
+ * @note Intended for galleries holding a fixed set of options, so the width neither
+ *       stretches with the panel nor cuts trailing items off.
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 把图库宽度限制为恰好容纳给定数量的条目列
+ * @param columns 列数，传0恢复自动宽度
+ * @note 适合条目数量固定的场景，宽度既不会被拉伸，也不会把末尾的条目裁掉。
+ * \endif
+ */
+void SARibbonGallery::setPreferredColumnCount(int columns)
+{
+	if (columns < 0) {
+		columns = 0;
+	}
+	d_ptr->mPreferredColumnCount = columns;
+	d_ptr->applyPreferredWidth();
+	updateGeometry();
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the preferred column count
+ * @return Column count, 0 means the width is not constrained
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取期望的列数
+ * @return 列数，0表示不限制宽度
+ * \endif
+ */
+int SARibbonGallery::preferredColumnCount() const
+{
+	return d_ptr->mPreferredColumnCount;
+}
+
+/**
+ * \if ENGLISH
+ * @brief Set a lower bound for the item grid width (0 = derive it from the content)
+ * @param width Lower bound of the grid width in pixels
+ * @note Several galleries placed side by side can be aligned by giving them the same
+ *       value, so their items share exactly the same grid size.
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 设置格子宽度的下限（传0表示完全按内容计算）
+ * @param width 格子宽度的下限，单位像素
+ * @note 并排的多个图库传入同一个值即可让它们的格子尺寸完全一致。
+ * \endif
+ */
+void SARibbonGallery::setPreferredGridWidth(int width)
+{
+	if (width < 0) {
+		width = 0;
+	}
+	if (d_ptr->mPreferredGridWidth == width) {
+		return;
+	}
+	d_ptr->mPreferredGridWidth = width;
+	d_ptr->applyPreferredWidth();
+	updateGeometry();
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the lower bound of the item grid width, 0 means it is derived from the content
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取格子宽度的下限，0表示完全由内容决定
+ * \endif
+ */
+int SARibbonGallery::preferredGridWidth() const
+{
+	return d_ptr->mPreferredGridWidth;
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the grid width the current content needs to be fully displayed
+ * @return Required grid width, -1 when it cannot be determined yet
+ * @note Use it together with setPreferredGridWidth() to align several galleries.
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取当前内容完整显示所需的格宽
+ * @return 所需格宽，暂时无法确定时返回-1
+ * @note 配合setPreferredGridWidth()使用，可让多个图库的格子尺寸保持一致。
+ * \endif
+ */
+int SARibbonGallery::contentGridWidth() const
+{
+	return d_ptr->contentMinGridWidth();
+}
+
+/**
+ * \if ENGLISH
+ * @brief Get the size hint, the width respects preferredColumnCount()
+ * @return Size hint
+ * \endif
+ *
+ * \if CHINESE
+ * @brief 获取尺寸提示，宽度遵循preferredColumnCount()
+ * @return 尺寸提示
+ * \endif
+ */
+QSize SARibbonGallery::sizeHint() const
+{
+	const QSize base = QFrame::sizeHint();
+	if (d_ptr->mPreferredColumnCount <= 0) {
+		return base;
+	}
+	const int w = d_ptr->widthForColumnCount(d_ptr->mPreferredColumnCount);
+	if (w <= 0) {
+		return base;
+	}
+	return QSize(w, base.height());
+}
+
+/**
  * @brief 上翻页
  */
 /**
@@ -23865,6 +24212,8 @@ void SARibbonGallery::resizeEvent(QResizeEvent* event)
 			group->recalcGridSize(h);
 		}
 	}
+	// gridSize此时已按真实高度更新, 收敛到刚好容纳设定列数的宽度
+	d_ptr->applyPreferredWidth();
 }
 
 /**
