@@ -289,6 +289,7 @@ find_package(Qt${QT_VERSION_MAJOR}LinguistTools QUIET)
         )
     endforeach()
 endif()
+if(SARIBBON_ENABLE_INSTALL)  # 作为子项目嵌入时默认关闭安装/导出规则
 # ------------------------------- install script -------------------------------
 
 # 头文件
@@ -356,6 +357,7 @@ install(FILES
 
 # 资源文件生成
 
+endif()  # SARIBBON_ENABLE_INSTALL
 if(WIN32)
 	create_win32_resource_version(
         TARGET ${SARIBBON_LIB_NAME}
