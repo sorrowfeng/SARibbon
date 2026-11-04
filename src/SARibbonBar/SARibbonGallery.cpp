@@ -770,6 +770,10 @@ void SARibbonGallery::setStretchFactor(int factor)
             p->updateGeometry();
         }
     }
+}
+
+/**
+ * \if ENGLISH
  * @brief Limit the gallery width to exactly fit the given number of item columns
  * @param columns Column count, 0 restores the automatic width
  * @note Intended for galleries holding a fixed set of options, so the width neither
