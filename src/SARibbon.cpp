@@ -34464,7 +34464,7 @@ class SARibbonMainWindow::PrivateData
 	SA_RIBBON_DECLARE_PUBLIC(SARibbonMainWindow)
 public:
 	PrivateData(SARibbonMainWindow* p);
-	void installFrameless(SARibbonMainWindow* p);
+	bool installFrameless(SARibbonMainWindow* p);
 	bool isUseRibbonBar() const;
 	bool isUseRibbonFrame() const;
 	bool isUseNativeFrame() const;
@@ -34491,14 +34491,22 @@ SARibbonMainWindow::PrivateData::PrivateData(SARibbonMainWindow* p) : q_ptr(p)
 {
 }
 
-void SARibbonMainWindow::PrivateData::installFrameless(SARibbonMainWindow* p)
+bool SARibbonMainWindow::PrivateData::installFrameless(SARibbonMainWindow* p)
 {
 #if SARIBBON_USE_3RDPARTY_FRAMELESSHELPER
 	mFramelessHelper = new QWK::WidgetWindowAgent(p);
-	mFramelessHelper->setup(p);
+	if (!mFramelessHelper->setup(p)) {
+		// QWindowKit 装不上时不能继续按无边框布局:否则自绘标题栏保留、系统标题栏也在,
+		// 表现为顶部一条黑边 + 界面整体下移一个标题栏高度。
+		qWarning() << "[SARibbon] QWindowKit setup failed, fall back to native frame";
+		delete mFramelessHelper;
+		mFramelessHelper = nullptr;
+		return false;
+	}
 #else
 	mFramelessHelper = new SAFramelessHelper(p);
 #endif
+	return true;
 }
 
 bool SARibbonMainWindow::PrivateData::isUseRibbonBar() const
@@ -34588,8 +34596,9 @@ SARibbonMainWindow::SARibbonMainWindow(QWidget* parent, SARibbonMainWindowStyles
 	d->mRibbonMainWindowStyle = style;
 	d->checkMainWindowFlag();
 	if (d->isUseRibbonBar()) {
-		if (d->isUseRibbonFrame()) {
-			d->installFrameless(this);
+		if (d->isUseRibbonFrame() && !d->installFrameless(this)) {
+			d->mRibbonMainWindowStyle.setFlag(SARibbonMainWindowStyleFlag::UseRibbonFrame, false);
+			d->mRibbonMainWindowStyle.setFlag(SARibbonMainWindowStyleFlag::UseNativeFrame, true);
 		}
 		setRibbonBar(createRibbonBar());
 		// 系统暗色模式自动切换，可通过 SA::setEnableSystemDarkModeAutoSwitch(false) 关闭
