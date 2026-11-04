@@ -209,6 +209,12 @@ static QString themeToTemplatePath(SARibbonTheme theme)
         return ":/SARibbonTheme/resource/templates/win7.qss";
     case SARibbonTheme::RibbonThemeOffice2013:
         return ":/SARibbonTheme/resource/templates/office2013.qss";
+    case SARibbonTheme::RibbonThemeFluentUILight:
+        return ":/SARibbonTheme/resource/theme-fluent-ui-light.qss";
+    case SARibbonTheme::RibbonThemeFluentUIDark:
+        return ":/SARibbonTheme/resource/theme-fluent-ui-dark.qss";
+    case SARibbonTheme::RibbonThemeModernBlue:
+        return ":/SARibbonTheme/resource/theme-modern-blue.qss";
     default:
         return QString();
     }
@@ -291,14 +297,17 @@ void applyRibbonTheme(QWidget* w, SARibbonBar* bar, SARibbonTheme theme,
 {
     // If palette is provided and a template exists, use template-based approach
     QString templatePath = themeToTemplatePath(theme);
-    if (palette.variables().size() > 0 && !templatePath.isEmpty() && w) {
+    if (!templatePath.isEmpty() && w) {
         QString baseQss = loadResourceText(":/SARibbonTheme/resource/theme-base.qss");
 
         // Load the QSS template
         QString templateQss = loadResourceText(templatePath);
         if (!templateQss.isEmpty()) {
             // Replace {{token}} placeholders with palette colors
-            QString processedQss = SA::replaceQssTokens(templateQss, palette);
+            // 没有调色板时模板即完整样式表，直接使用（不做 token 替换）
+            QString processedQss = palette.variables().size() > 0
+                                       ? SA::replaceQssTokens(templateQss, palette)
+                                       : templateQss;
             w->setStyleSheet(baseQss + "\n" + processedQss);
         } else {
             // Template file not found, fall back to base QSS

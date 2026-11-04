@@ -229,6 +229,9 @@ enum class SARibbonTheme
     RibbonThemeOffice2021Dark,   ///< Office 2021 - Dark theme
     RibbonThemeDark,             ///< Dark theme
     RibbonThemeDark2,            ///< Dark theme 2
+    RibbonThemeFluentUILight,    ///< Fluent UI light theme
+    RibbonThemeFluentUIDark,     ///< Fluent UI dark theme
+    RibbonThemeModernBlue,       ///< Modern Blue theme
     RibbonThemeUserDefine = 1000
 };
 Q_DECLARE_METATYPE(SARibbonTheme)
