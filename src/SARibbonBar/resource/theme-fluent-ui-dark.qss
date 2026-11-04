@@ -299,6 +299,7 @@ SARibbonCategoryScrollButton[arrowType="4"] {
 /*SARibbonSystemToolButton*/
 
 SARibbonSystemToolButton {
+    qproperty-glyphColor: #ffffff;
   background-color: transparent;
   border:none;
 }
@@ -312,7 +313,6 @@ SARibbonSystemToolButton:focus {
 SARibbonSystemToolButton#SAMinimizeWindowButton {
   background-position:center;
   background-repeat: no-repeat;
-  background-image: url(:/SARibbon/image/resource/Titlebar_Min_Hover.svg);
 }
 SARibbonSystemToolButton#SAMinimizeWindowButton:hover{
   background-color: #242424;
@@ -324,13 +324,11 @@ SARibbonSystemToolButton#SAMinimizeWindowButton:pressed{
 SARibbonSystemToolButton#SAMaximizeWindowButton {
     background-position:center;
     background-repeat: no-repeat;
-    background-image: url(:/SARibbon/image/resource/Titlebar_Max_Hover.svg);
 }
 SARibbonSystemToolButton#SAMaximizeWindowButton:hover {
     background-color: #242424;
 }
 SARibbonSystemToolButton#SAMaximizeWindowButton:checked {
-    background-image: url(:/SARibbon/image/resource/Titlebar_Normal_Hover.svg) center;
 }
 
 
@@ -338,7 +336,6 @@ SARibbonSystemToolButton#SAMaximizeWindowButton:checked {
 SARibbonSystemToolButton#SACloseWindowButton {
     background-position:center;
     background-repeat: no-repeat;
-    background-image: url(:/SARibbon/image/resource/Titlebar_Close_Hover.svg);
 }
 SARibbonSystemToolButton#SACloseWindowButton:hover {
   background-color: #e81123;

@@ -291,6 +291,7 @@ QCheckBox {
 }
 
 SARibbonSystemToolButton {
+    qproperty-glyphColor: #ffffff;
     background-color: #0F3080;
     border: none;
     color: #ffffff;
@@ -307,20 +308,16 @@ SARibbonSystemToolButton:pressed {
 SARibbonSystemToolButton#SAMinimizeWindowButton {
     background-position: center;
     background-repeat: no-repeat;
-    background-image: url(:/SARibbon/image/resource/Titlebar_Min_Hover.svg);
 }
 SARibbonSystemToolButton#SAMaximizeWindowButton {
     background-position: center;
     background-repeat: no-repeat;
-    background-image: url(:/SARibbon/image/resource/Titlebar_Max_Hover.svg);
 }
 SARibbonSystemToolButton#SAMaximizeWindowButton:checked {
-    background-image: url(:/SARibbon/image/resource/Titlebar_Normal_Hover.svg);
 }
 SARibbonSystemToolButton#SACloseWindowButton {
     background-position: center;
     background-repeat: no-repeat;
-    background-image: url(:/SARibbon/image/resource/Titlebar_Close_Hover.svg);
 }
 SARibbonSystemToolButton#SACloseWindowButton:hover {
     background-color: #d83b01;
